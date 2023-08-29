@@ -4,11 +4,11 @@
         android:id="@+id/homeFragment"
         android:enabled="true"
         android:title="Home"
-        android:icon="@drawable/ic_home_outline"/>
+        android:icon="@drawable/home_selector"/>
 
     <item
         android:id="@+id/accountFragment"
         android:enabled="true"
         android:title="Account"
-        android:icon="@drawable/circle_user_outline"/>
+        android:icon="@drawable/account_selector"/>
 </menu>

@@ -17,12 +17,19 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bangunkota.bangunkota.R
+import com.bangunkota.bangunkota.data.repository.abstractions.EventRepository
+import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
+import com.bangunkota.bangunkota.domain.entity.Event
+import com.bangunkota.bangunkota.domain.usecase.EventUseCase
 import com.bangunkota.bangunkota.presentation.adapter.EventPagingAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
+import com.bangunkota.bangunkota.utils.RandomImageGenerator
+import com.bangunkota.bangunkota.utils.RandomTitleGenerator
+import com.bangunkota.bangunkota.utils.UniqueIdGenerator
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -63,12 +70,36 @@ class HomeFragment : Fragment() {
         val userViewModelFactory = UserViewModelFactory(userPreferencesManager)
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
 
-        val viewModelFactory = EventViewModelFactory()
-        eventViewModel = ViewModelProvider(requireActivity(), viewModelFactory)[EventViewModel::class.java]
+        val eventRepository = EventRepositoryImpl()
+        val eventUseCase = EventUseCase(eventRepository)
+        val viewModelFactory = EventViewModelFactory(eventUseCase)
+        eventViewModel =
+            ViewModelProvider(requireActivity(), viewModelFactory)[EventViewModel::class.java]
+
+        val user = hashMapOf(
+            "id" to UniqueIdGenerator.generateUniqueId(),
+            "title" to RandomTitleGenerator.generateRandomTitle(),
+            "address" to "Kecamatan Bekasi Selatan, Indonesia",
+            "date" to "DEC, 24",
+            "image" to RandomImageGenerator.generateRandomImageUrl(800, 600),
+        )
+        lifecycleScope.launch {
+            val result = eventViewModel.insertEvent(user)
+           result.onSuccess {
+               if (result.isSuccess) {
+                   Toast.makeText(requireActivity(), "Success Store Data ${user["id"]}", Toast.LENGTH_SHORT).show()
+               } else {
+                   Toast.makeText(requireActivity(), "Gagal Store Data ${user["id"]}", Toast.LENGTH_SHORT).show()
+               }
+           }.onFailure {
+               Toast.makeText(requireActivity(), "Failure Store Data kesalahan ${it.localizedMessage}", Toast.LENGTH_SHORT).show()
+           }
+        }
 
         val eventAdapter = EventPagingAdapter(requireActivity())
         binding.rvEvent.apply {
-            layoutManager = LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
+            layoutManager =
+                LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
             adapter = eventAdapter
         }
 
@@ -91,8 +122,8 @@ class HomeFragment : Fragment() {
 
         binding.currentDate.text = currentDate()
 
-        userViewModel.userName.observe(viewLifecycleOwner){
-            binding.topAppBar.title = it
+        userViewModel.userName.observe(viewLifecycleOwner) {
+            binding.topAppBar.title = "Hi, $it"
         }
 
         userViewModel.userPhoto.observe(viewLifecycleOwner) {
@@ -101,7 +132,10 @@ class HomeFragment : Fragment() {
                 .load(it)
                 .apply(RequestOptions.circleCropTransform())
                 .into(object : CustomTarget<Bitmap>() {
-                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                    override fun onResourceReady(
+                        resource: Bitmap,
+                        transition: Transition<in Bitmap>?
+                    ) {
                         // Konversi Bitmap menjadi Drawable
                         val iconDrawable = BitmapDrawable(resources, resource)
                         binding.topAppBar.menu.findItem(R.id.account).icon = iconDrawable
@@ -109,7 +143,11 @@ class HomeFragment : Fragment() {
 
                     override fun onLoadCleared(placeholder: Drawable?) {
                         // Handle jika gambar gagal dimuat atau dihapus
-                        Toast.makeText(requireActivity(), "Glide Gagal Upload Image Profile", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireActivity(),
+                            "Glide Gagal Upload Image Profile",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 })
         }
@@ -119,7 +157,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.topAppBar.setOnMenuItemClickListener { menuItem ->
-            when(menuItem.itemId) {
+            when (menuItem.itemId) {
                 R.id.account -> {
                     Toast.makeText(requireActivity(), "User Clicked", Toast.LENGTH_SHORT).show()
                     true
@@ -144,7 +182,7 @@ class HomeFragment : Fragment() {
                 requireActivity(),
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
-        ){
+        ) {
             // Jika izin tidak diberikan, mungkin perlu meminta izin kepada pengguna
             // Anda dapat menggunakan ActivityCompat.requestPermissions() di sini
             return
@@ -165,7 +203,7 @@ class HomeFragment : Fragment() {
                         } else {
                             binding.currentAddress.text = "Address IsEmpty!"
                         }
-                    }catch (e: IOException) {
+                    } catch (e: IOException) {
                         e.printStackTrace()
                     }
                 } else {

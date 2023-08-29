@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/bg_gradient"
     tools:context=".presentation.view.main.fragment.HomeFragment">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -20,7 +21,8 @@
             app:navigationIcon="@drawable/menu_outline"
             app:menu="@menu/top_app_bar"
             app:layout_scrollFlags="scroll|enterAlways|snap"
-            app:layout_scrollEffect="compress"/>
+            app:layout_scrollEffect="compress"
+            android:background="@android:color/transparent"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -29,7 +31,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="@dimen/padding_root"
-        android:background="@color/purple_500"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <!-- Scrollable content -->
@@ -83,6 +84,14 @@
                         android:layout_margin="4dp"/>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All upcomming event ✨"
+                android:textSize="@dimen/title_size"
+                android:textColor="@color/black"
+                android:textStyle="bold"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_event"

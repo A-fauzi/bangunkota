@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.databinding.ItemEventBinding
 import com.bangunkota.bangunkota.domain.entity.Event
 import com.bumptech.glide.Glide
@@ -32,6 +33,7 @@ class EventPagingAdapter(private val context: Context) : PagingDataAdapter<Event
                 binding.itemDate.text = this?.date
                 Glide.with(context)
                     .load(this?.image)
+                    .error(R.drawable.img_placeholder)
                     .into(binding.itemImage)
             }
         }

@@ -1,5 +1,6 @@
 package com.bangunkota.bangunkota.data.datasource.remote.firebase
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.bangunkota.bangunkota.domain.entity.Event
@@ -19,16 +20,19 @@ class EventPagingSource(
 
     override suspend fun load(params: LoadParams<QuerySnapshot>): LoadResult<QuerySnapshot, Event> {
         return try {
-            val currentPage = params.key ?: fireStore.collection("event")
+            val currentPage = params.key ?: fireStore.collection("events")
                 .limit(10)
                 .get()
                 .await()
 
             val lastDocumentSnapshot = currentPage.documents[currentPage.size() - 1]
 
-            val nextPage = fireStore.collection("event").limit(10).startAfter(lastDocumentSnapshot)
+            val nextPage = fireStore.collection("events").limit(10)
+                .startAfter(lastDocumentSnapshot)
                 .get()
                 .await()
+
+            Log.d("NextPageData", "Next page loaded successfully: $nextPage")
 
             LoadResult.Page(
                 data = currentPage.toObjects(Event::class.java),
@@ -36,6 +40,7 @@ class EventPagingSource(
                 nextKey = nextPage
             )
         }catch (e: Exception) {
+            Log.e("NextPageData", "Error loading next page: ${e.message}", e)
             LoadResult.Error(e)
         }
     }
