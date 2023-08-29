@@ -1,19 +1,11 @@
 package com.bangunkota.bangunkota.presentation.view
 
-import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContract
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import com.bangunkota.bangunkota.data.repository.AuthRepositoryImpl
 import com.bangunkota.bangunkota.databinding.ActivitySignInBinding
 import com.bangunkota.bangunkota.domain.usecase.SignInUseCase
@@ -21,15 +13,13 @@ import com.bangunkota.bangunkota.presentation.presenter.viewmodel.SignInViewMode
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.SignInViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
+import com.bangunkota.bangunkota.presentation.view.main.MainActivity
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.launch
 
 class SignInActivity : AppCompatActivity() {
 

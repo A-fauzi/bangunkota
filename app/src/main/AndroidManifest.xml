@@ -28,7 +28,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".presentation.view.MainActivity"
+            android:name=".presentation.view.main.MainActivity"
             android:exported="false">
 
             <meta-data
