@@ -2,6 +2,7 @@ package com.bangunkota.bangunkota.presentation.view.main
 
 import android.Manifest
 import android.content.Context
+import android.location.Geocoder
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -23,15 +24,19 @@ import com.bangunkota.bangunkota.databinding.ActivityMainBinding
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.N)
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +71,8 @@ class MainActivity : AppCompatActivity() {
                     }
                     else -> {
                         // No location access granted.
-                        Toast.makeText(this, "No location access granted", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Izinkan Lokasi Agar dapat masuk ke aplikasi", Toast.LENGTH_SHORT).show()
+                        finish()
                     }
                 }
             }
