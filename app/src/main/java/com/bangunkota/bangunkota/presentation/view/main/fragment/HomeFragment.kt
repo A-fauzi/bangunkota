@@ -19,6 +19,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class HomeFragment : Fragment() {
@@ -42,6 +44,8 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        binding.currentDate.text = currentDate()
 
         userViewModel.userName.observe(viewLifecycleOwner){
             binding.topAppBar.title = it
@@ -79,5 +83,11 @@ class HomeFragment : Fragment() {
                 else -> false
             }
         }
+    }
+
+    private fun currentDate(): String {
+        val currentTime = Calendar.getInstance().time
+        val desiredFormat = SimpleDateFormat("EEEE, d MMMM", Locale.ENGLISH)
+        return desiredFormat.format(currentTime)
     }
 }
