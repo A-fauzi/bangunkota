@@ -12,6 +12,7 @@
         android:orientation="vertical">
 
         <ImageView
+            android:id="@+id/item_image"
             android:layout_width="wrap_content"
             android:layout_height="250dp"
             android:scaleType="centerCrop"
@@ -30,6 +31,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/item_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Free Food for Street Children"
@@ -38,6 +40,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/item_address"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Bekasi, Jawabarat, \n17145"
@@ -56,6 +59,7 @@
 
 
                 <TextView
+                    android:id="@+id/item_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="OCT \n24"

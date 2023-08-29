@@ -1,12 +1,14 @@
 package com.bangunkota.bangunkota.presentation.view
 
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.bangunkota.bangunkota.data.repository.AuthRepositoryImpl
+import com.bangunkota.bangunkota.data.repository.implementatios.AuthRepositoryImpl
 import com.bangunkota.bangunkota.databinding.ActivitySignInBinding
 import com.bangunkota.bangunkota.domain.usecase.SignInUseCase
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.SignInViewModel
@@ -34,6 +36,7 @@ class SignInActivity : AppCompatActivity() {
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var gso: GoogleSignInOptions
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySignInBinding.inflate(layoutInflater)

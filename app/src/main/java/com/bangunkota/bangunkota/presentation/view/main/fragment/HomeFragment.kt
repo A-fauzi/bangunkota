@@ -5,31 +5,36 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
+import com.bangunkota.bangunkota.presentation.adapter.EventPagingAdapter
+import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
+import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
-import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import okio.IOException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,6 +44,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeBinding
     private lateinit var userViewModel: UserViewModel
+    private lateinit var eventViewModel: EventViewModel
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var geocoder: Geocoder
@@ -56,6 +62,21 @@ class HomeFragment : Fragment() {
         val userPreferencesManager = UserPreferencesManager(requireActivity())
         val userViewModelFactory = UserViewModelFactory(userPreferencesManager)
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
+
+        val viewModelFactory = EventViewModelFactory()
+        eventViewModel = ViewModelProvider(requireActivity(), viewModelFactory)[EventViewModel::class.java]
+
+        val eventAdapter = EventPagingAdapter(requireActivity())
+        binding.rvEvent.apply {
+            layoutManager = LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
+            adapter = eventAdapter
+        }
+
+        lifecycleScope.launch {
+            eventViewModel.flow.collect() { pagingData ->
+                eventAdapter.submitData(pagingData)
+            }
+        }
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireContext(), Locale.getDefault())
