@@ -1,7 +1,6 @@
 package com.bangunkota.bangunkota.presentation.view.main.fragment
 
-import android.Manifest
-import android.content.pm.PackageManager
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -12,12 +11,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bangunkota.bangunkota.R
-import com.bangunkota.bangunkota.data.repository.abstractions.EventRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
 import com.bangunkota.bangunkota.domain.entity.Event
@@ -27,23 +24,18 @@ import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
-import com.bangunkota.bangunkota.utils.RandomImageGenerator
-import com.bangunkota.bangunkota.utils.RandomTitleGenerator
-import com.bangunkota.bangunkota.utils.UniqueIdGenerator
-import com.bangunkota.bangunkota.utils.UserPreferencesManager
+import com.bangunkota.bangunkota.presentation.view.CreateEventActivity
+import com.bangunkota.bangunkota.presentation.view.SignInActivity
+import com.bangunkota.bangunkota.utils.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import okio.IOException
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -55,6 +47,9 @@ class HomeFragment : Fragment() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var geocoder: Geocoder
+    private lateinit var myLocation: MyLocation
+
+    private lateinit var eventAdapter: EventPagingAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -63,8 +58,21 @@ class HomeFragment : Fragment() {
         // Inflate the layout for this fragment
         binding = FragmentHomeBinding.inflate(layoutInflater, container, false)
 
+        initObj()
+
+        exampleStoreDataToFireStore()
+        setUpRecyclerView()
+        getLastLocation()
+
+        return binding.root
+    }
+
+    private fun initObj() {
+        eventAdapter = EventPagingAdapter(requireActivity())
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireActivity(), Locale.getDefault())
+        myLocation = MyLocation(requireActivity(), fusedLocationClient, geocoder)
 
         val userPreferencesManager = UserPreferencesManager(requireActivity())
         val userViewModelFactory = UserViewModelFactory(userPreferencesManager)
@@ -75,55 +83,98 @@ class HomeFragment : Fragment() {
         val viewModelFactory = EventViewModelFactory(eventUseCase)
         eventViewModel =
             ViewModelProvider(requireActivity(), viewModelFactory)[EventViewModel::class.java]
-
-        val user = hashMapOf(
-            "id" to UniqueIdGenerator.generateUniqueId(),
-            "title" to RandomTitleGenerator.generateRandomTitle(),
-            "address" to "Kecamatan Bekasi Selatan, Indonesia",
-            "date" to "DEC, 24",
-            "image" to RandomImageGenerator.generateRandomImageUrl(800, 600),
-        )
-        lifecycleScope.launch {
-            val result = eventViewModel.insertEvent(user)
-           result.onSuccess {
-               if (result.isSuccess) {
-                   Toast.makeText(requireActivity(), "Success Store Data ${user["id"]}", Toast.LENGTH_SHORT).show()
-               } else {
-                   Toast.makeText(requireActivity(), "Gagal Store Data ${user["id"]}", Toast.LENGTH_SHORT).show()
-               }
-           }.onFailure {
-               Toast.makeText(requireActivity(), "Failure Store Data kesalahan ${it.localizedMessage}", Toast.LENGTH_SHORT).show()
-           }
-        }
-
-        val eventAdapter = EventPagingAdapter(requireActivity())
-        binding.rvEvent.apply {
-            layoutManager =
-                LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
-            adapter = eventAdapter
-        }
-
-        lifecycleScope.launch {
-            eventViewModel.flow.collect() { pagingData ->
-                eventAdapter.submitData(pagingData)
-            }
-        }
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        geocoder = Geocoder(requireContext(), Locale.getDefault())
-
-        getLastLocation()
-
-        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.currentDate.text = currentDate()
+        lifecycleScope.launch {
+            eventViewModel.flow.collect { pagingData ->
+                eventAdapter.submitData(pagingData)
+            }
+        }
 
+        binding.currentDate.text = MyDate.currentDate()
+
+        binding.fabCreateEvent.setOnClickListener {
+            startActivity(Intent(requireActivity(), CreateEventActivity::class.java))
+        }
+
+        topAppBarBehaviour()
+    }
+
+    private fun exampleStoreDataToFireStore() {
+        val event = Event(
+            id = UniqueIdGenerator.generateUniqueId(),
+            title = RandomTitleGenerator.generateRandomTitle(),
+            address = "Kecamatan Bekasi Selatan, Indonesia",
+            image = "https://i.pinimg.com/564x/0a/ad/42/0aad421488bbc7befa490bad2ac6ef8f.jpg"
+        )
+
+        lifecycleScope.launch {
+            val result = eventViewModel.insertEvent(event)
+            result.onSuccess {
+                if (result.isSuccess) {
+                    Toast.makeText(
+                        requireActivity(),
+                        "Success Store Data ${event.id}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(
+                        requireActivity(),
+                        "Gagal Store Data ${event.id}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }.onFailure {
+                Toast.makeText(
+                    requireActivity(),
+                    "Failure Store Data kesalahan ${it.localizedMessage}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun setUpRecyclerView() {
+        binding.rvEvent.apply {
+            layoutManager =
+                LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
+            adapter = eventAdapter
+        }
+    }
+
+    private fun getLastLocation() {
+        myLocation.getLastLocation({
+            if (it != null) {
+                val lat = it.latitude
+                val long = it.longitude
+                try {
+                    val addresses = geocoder.getFromLocation(lat, long, 1)
+                    if (addresses.isNotEmpty()) {
+                        val address = addresses[0]
+                        val cityName = address.locality
+                        val countryName = address.countryName
+                        val currentAddress = "$cityName, $countryName"
+                        binding.currentAddress.text = currentAddress
+                    } else {
+                        binding.currentAddress.text = "Address IsEmpty!"
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            } else {
+                binding.currentAddress.text = "Address Is Null!"
+            }
+        }, {
+            binding.currentAddress.text = it.localizedMessage
+        })
+    }
+
+    private fun topAppBarBehaviour() {
         userViewModel.userName.observe(viewLifecycleOwner) {
-            binding.topAppBar.title = "Hi, $it"
+            binding.appBarLayout.topAppBar.title = "Hi, $it"
         }
 
         userViewModel.userPhoto.observe(viewLifecycleOwner) {
@@ -138,7 +189,7 @@ class HomeFragment : Fragment() {
                     ) {
                         // Konversi Bitmap menjadi Drawable
                         val iconDrawable = BitmapDrawable(resources, resource)
-                        binding.topAppBar.menu.findItem(R.id.account).icon = iconDrawable
+                        binding.appBarLayout.topAppBar.menu.findItem(R.id.account).icon = iconDrawable
                     }
 
                     override fun onLoadCleared(placeholder: Drawable?) {
@@ -152,14 +203,14 @@ class HomeFragment : Fragment() {
                 })
         }
 
-        binding.topAppBar.setNavigationOnClickListener {
+        binding.appBarLayout.topAppBar.setNavigationOnClickListener {
             Toast.makeText(requireActivity(), "Menu Clicked", Toast.LENGTH_SHORT).show()
         }
 
-        binding.topAppBar.setOnMenuItemClickListener { menuItem ->
+        binding.appBarLayout.topAppBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.account -> {
-                    Toast.makeText(requireActivity(), "User Clicked", Toast.LENGTH_SHORT).show()
+                    signOutUser()
                     true
                 }
                 else -> false
@@ -167,50 +218,12 @@ class HomeFragment : Fragment() {
         }
     }
 
-
-    private fun currentDate(): String {
-        val currentTime = Calendar.getInstance().time
-        val desiredFormat = SimpleDateFormat("EEEE, d MMMM", Locale.ENGLISH)
-        return desiredFormat.format(currentTime)
+    private fun signOutUser() {
+        val auth = FirebaseAuth.getInstance()
+        auth.signOut()
+        startActivity(Intent(requireActivity(), SignInActivity::class.java))
+        activity?.finish()
     }
 
-    private fun getLastLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                requireActivity(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                requireActivity(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Jika izin tidak diberikan, mungkin perlu meminta izin kepada pengguna
-            // Anda dapat menggunakan ActivityCompat.requestPermissions() di sini
-            return
-        }
-        fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
-            .addOnSuccessListener { location ->
-                if (location != null) {
-                    val lat = location.latitude
-                    val long = location.longitude
-                    try {
-                        val addresses = geocoder.getFromLocation(lat, long, 1)
-                        if (addresses.isNotEmpty()) {
-                            val address = addresses[0]
-                            val cityName = address.locality
-                            val countryName = address.countryName
-                            val currentAddress = "$cityName, $countryName"
-                            binding.currentAddress.text = currentAddress
-                        } else {
-                            binding.currentAddress.text = "Address IsEmpty!"
-                        }
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                    }
-                } else {
-                    binding.currentAddress.text = "Address null!"
-                }
-            }.addOnFailureListener {
-                binding.currentAddress.text = "Failure Get Address ${it.localizedMessage}"
-            }
-    }
+
 }

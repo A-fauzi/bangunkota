@@ -15,7 +15,7 @@ class EventPagingSource(
     private val fireStore: FirebaseFirestore
 ) : PagingSource<QuerySnapshot, Event>() {
     override fun getRefreshKey(state: PagingState<QuerySnapshot, Event>): QuerySnapshot? {
-        TODO("Not yet implemented")
+        return null
     }
 
     override suspend fun load(params: LoadParams<QuerySnapshot>): LoadResult<QuerySnapshot, Event> {
@@ -32,15 +32,12 @@ class EventPagingSource(
                 .get()
                 .await()
 
-            Log.d("NextPageData", "Next page loaded successfully: $nextPage")
-
             LoadResult.Page(
                 data = currentPage.toObjects(Event::class.java),
                 prevKey = null,
                 nextKey = nextPage
             )
         }catch (e: Exception) {
-            Log.e("NextPageData", "Error loading next page: ${e.message}", e)
             LoadResult.Error(e)
         }
     }

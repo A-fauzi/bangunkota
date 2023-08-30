@@ -13,12 +13,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
 
 class EventViewModel(private val eventUseCase: EventUseCase): ViewModel() {
-    val flow = Pager(PagingConfig(20)) {
+    val flow = Pager(PagingConfig(10)) {
         EventPagingSource(FirebaseFirestore.getInstance())
     }.flow.cachedIn(viewModelScope)
 
 
-    suspend fun insertEvent(data: HashMap<String, out Any>): Result<Unit> {
+    suspend fun insertEvent(data: Event): Result<Unit> {
         return eventUseCase.insertData(data)
     }
 

@@ -4,7 +4,7 @@ import com.bangunkota.bangunkota.data.repository.abstractions.EventRepository
 import com.bangunkota.bangunkota.domain.entity.Event
 
 class EventUseCase(private val repository: EventRepository) {
-    suspend fun insertData(data: HashMap<String, out Any>): Result<Unit> {
+    suspend fun insertData(data: Event): Result<Unit> {
         return repository.insertData(data)
     }
 

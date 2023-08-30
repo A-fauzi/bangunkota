@@ -14,4 +14,8 @@
         <!-- Customize your theme here. -->
         <item name="android:textSize">12sp</item>
     </style>
+
+    <style name="ThemeOverlay.AppTheme.TextInputEditText.Outlined" parent="">
+        <item name="colorControlActivated">@color/purple_700</item>
+    </style>
 </resources>

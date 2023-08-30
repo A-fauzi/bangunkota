@@ -27,12 +27,12 @@ class EventPagingAdapter(private val context: Context) : PagingDataAdapter<Event
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         with(holder) {
-            with(getItem(position)) {
-                binding.itemTitle.text = this?.title
-                binding.itemAddress.text = this?.address
-                binding.itemDate.text = this?.date
+            with(getItem(position) ?: return) {
+                binding.itemTitle.text = this.title
+                binding.itemAddress.text = this.address
+                binding.itemDate.text = this.date.toString()
                 Glide.with(context)
-                    .load(this?.image)
+                    .load(this.image)
                     .error(R.drawable.img_placeholder)
                     .into(binding.itemImage)
             }

@@ -8,11 +8,11 @@ import kotlinx.coroutines.tasks.await
 class EventRepositoryImpl: EventRepository {
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
-    override suspend fun insertData(data: HashMap<String, out Any>): Result<Unit> {
+    override suspend fun insertData(data: Event): Result<Unit> {
         return try {
-            val document = firestore.collection("events")
+            val document = firestore.collection("events").document(data.id.toString())
             document
-                .add(data)
+                .set(data)
                 .await() // Tunggu hingga operasi selesai
 
             Result.success(Unit)
