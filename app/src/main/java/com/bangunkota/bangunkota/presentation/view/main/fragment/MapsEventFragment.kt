@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnticipateOvershootInterpolator
 import android.widget.Toast
+import android.widget.ZoomButtonsController
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.databinding.FragmentMapsEventBinding
 import com.bangunkota.bangunkota.utils.MyLocation
@@ -64,6 +65,14 @@ class MapsEventFragment : Fragment(), OnMapClickListener {
         geocoder = Geocoder(requireActivity(), Locale.getDefault())
         myLocation = MyLocation(requireActivity(), fusedLocationClient, geocoder)
 
+        mapViewBehaviour()
+
+
+
+        return binding.root
+    }
+
+    private fun mapViewBehaviour() {
         mapView = binding.mapView
         mapboxMap = mapView?.getMapboxMap()
         mapboxMap?.loadStyle(
@@ -91,10 +100,6 @@ class MapsEventFragment : Fragment(), OnMapClickListener {
             ).show()
             mapboxMap?.addOnMapClickListener(this)
         }
-
-
-
-        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -133,8 +138,8 @@ class MapsEventFragment : Fragment(), OnMapClickListener {
                 val cameraOpt = cameraOptions {
                     center(Point.fromLngLat(it.longitude, it.latitude))
                     zoom(12.5)
-                    pitch(75.0)
-                    bearing(100.0)
+                    pitch(60.0)
+                    bearing(130.0)
                 }
 
                 mapboxMap?.flyTo(
@@ -186,7 +191,7 @@ class MapsEventFragment : Fragment(), OnMapClickListener {
             bearing(0.0)
         }
         private val CAMERA_END = cameraOptions {
-            center(Point.fromLngLat(106.992416, -6.241586))
+            center(Point.fromLngLat(106.827153, -6.175392))
             zoom(12.5)
             pitch(75.0)
             bearing(130.0)
