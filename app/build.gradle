@@ -103,5 +103,13 @@ dependencies {
     implementation 'com.google.android.gms:play-services-tasks:18.0.2'
 
 
+    // Mapbox
+    implementation ('com.mapbox.maps:android:10.15.1'){
+        exclude group: 'group_name', module: 'module_name'
+    }
+
+
+
+
 
 }

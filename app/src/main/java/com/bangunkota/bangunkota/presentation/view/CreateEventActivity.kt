@@ -40,7 +40,7 @@ class CreateEventActivity : AppCompatActivity() {
         binding.eventLocation.outlinedTextFieldEvent.endIconDrawable =
             ResourcesCompat.getDrawable(resources, R.drawable.marker__1_, null)
         binding.eventLocation.outlinedTextFieldEvent.setEndIconOnClickListener {
-            Toast.makeText(this, "Map Clicked", Toast.LENGTH_SHORT).show()
+//            val placeAutoComplete = Place
         }
 
         binding.eventDate.outlinedTextFieldEvent.hint = "Date"
