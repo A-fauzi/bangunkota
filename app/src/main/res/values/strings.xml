@@ -3,4 +3,6 @@
     <string name="mapbox_access_token">pk.eyJ1IjoiYWZmYXV6aSIsImEiOiJjbGx4d2JxdXYwN3QyM2RuMXY0dDA4eXI2In0.2UumVbkXGTvvWvxDZ7OBTw</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="tap_on_map_instruction">Tap On Map Instruction</string>
+
 </resources>

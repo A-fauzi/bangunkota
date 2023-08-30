@@ -108,6 +108,10 @@ dependencies {
         exclude group: 'group_name', module: 'module_name'
     }
 
+    // Lottie
+    def lottieVersion = "3.4.0"
+    implementation "com.airbnb.android:lottie:$lottieVersion"
+
 
 
 
