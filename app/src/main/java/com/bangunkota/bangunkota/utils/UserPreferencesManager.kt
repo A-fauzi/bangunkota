@@ -12,12 +12,16 @@ private val Context.dataStore by preferencesDataStore("user_preferences")
 class UserPreferencesManager(context: Context) {
     private val dataStore = context.dataStore
 
-    suspend fun saveUserData(username: String, email: String, photoUrl: String) {
+    suspend fun saveUserData(userId: String, username: String, email: String, photoUrl: String) {
         dataStore.edit { preferences ->
+            preferences[PreferencesKeys.USER_ID] = userId
             preferences[PreferencesKeys.USER_NAME] = username
             preferences[PreferencesKeys.USER_EMAIL] = email
             preferences[PreferencesKeys.USER_PHOTO] = photoUrl
         }
+    }
+    val userIdFlow = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.USER_ID] ?: ""
     }
     val userNameFlow = dataStore.data.map { preferences ->
         preferences[PreferencesKeys.USER_NAME] ?: ""

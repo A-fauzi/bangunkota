@@ -1,5 +1,6 @@
 package com.bangunkota.bangunkota.presentation.adapter
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -14,7 +15,7 @@ import com.bumptech.glide.Glide
 class EventPagingAdapter(private val context: Context) : PagingDataAdapter<Event, EventPagingAdapter.ViewHolder>(EventDiffComp) {
     object EventDiffComp : DiffUtil.ItemCallback<Event>() {
         override fun areItemsTheSame(oldItem: Event, newItem: Event): Boolean {
-            return oldItem.title == newItem.title
+            return oldItem.id == newItem.id
         }
 
         override fun areContentsTheSame(oldItem: Event, newItem: Event): Boolean {
@@ -25,12 +26,14 @@ class EventPagingAdapter(private val context: Context) : PagingDataAdapter<Event
 
     inner class ViewHolder(val binding: ItemEventBinding) : RecyclerView.ViewHolder(binding.root)
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         with(holder) {
             with(getItem(position) ?: return) {
                 binding.itemTitle.text = this.title
                 binding.itemAddress.text = this.address
-                binding.itemDate.text = this.date.toString()
+                binding.itemDate.text = this.date
+                binding.itemTime.text = "${this.time} WIB"
                 Glide.with(context)
                     .load(this.image)
                     .error(R.drawable.img_placeholder)

@@ -76,6 +76,7 @@ class SignInActivity : AppCompatActivity() {
         })
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onStart() {
         super.onStart()
 
@@ -114,7 +115,7 @@ class SignInActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                userViewModel.saveUserData(account.displayName.toString(), account.email.toString(), account.photoUrl.toString())
+                userViewModel.saveUserData(account.id.toString(), account.displayName.toString(), account.email.toString(), account.photoUrl.toString())
                 viewModel.signIn(account)
 
             }catch (e: ApiException) {

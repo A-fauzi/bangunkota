@@ -9,7 +9,7 @@ class EventUseCase(private val repository: EventRepository) {
     }
 
     suspend fun updateData(data: Event) {
-        val firestoreData = Event(data.id, data.title, data.address, data.date, data.image)
+        val firestoreData = Event(data.id, data.title, data.address, data.image, data.date, data.time)
         repository.updateData(firestoreData)
     }
 

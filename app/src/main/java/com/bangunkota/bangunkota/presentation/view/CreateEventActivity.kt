@@ -1,12 +1,16 @@
 package com.bangunkota.bangunkota.presentation.view
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.bangunkota.bangunkota.R
@@ -15,17 +19,20 @@ import com.bangunkota.bangunkota.databinding.ActivityCreateEventBinding
 import com.bangunkota.bangunkota.domain.entity.Event
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
+import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
+import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.presentation.view.main.MainActivity
-import com.bangunkota.bangunkota.utils.RandomTitleGenerator
+import com.bangunkota.bangunkota.utils.ImageCompressionHelper
 import com.bangunkota.bangunkota.utils.UniqueIdGenerator
+import com.bangunkota.bangunkota.utils.UserPreferencesManager
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.textfield.TextInputLayout.END_ICON_CUSTOM
-import com.google.android.material.textfield.TextInputLayout.END_ICON_NONE
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,6 +40,12 @@ class CreateEventActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCreateEventBinding
     private lateinit var eventViewModel: EventViewModel
+    private lateinit var userViewModel: UserViewModel
+
+    private var fillPath: Uri? = null
+
+    private var dataDate = "null"
+    private var dataTime = "null"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,24 +57,88 @@ class CreateEventActivity : AppCompatActivity() {
         val eventUseCase = EventUseCase(eventRepository)
         val viewModelFactory = EventViewModelFactory(eventUseCase)
         eventViewModel = ViewModelProvider(this, viewModelFactory)[EventViewModel::class.java]
+
+        val userPreferencesManager = UserPreferencesManager(this)
+        val userViewModelFactory = UserViewModelFactory(userPreferencesManager)
+        userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
+
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onStart() {
         super.onStart()
 
+        binding.cvUploadImage.setOnClickListener {
+            getImageFromGalerry()
+        }
         topAppBarBehaviour()
         setFormEvent()
 
         binding.btnCreateEvent.setOnClickListener {
-            exampleStoreDataToFireStore()
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
+
+            uploadImageToFireStorage()
+
+//            exampleStoreDataToFireStore()
+//            val intent = Intent(this, MainActivity::class.java)
+//            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+//            startActivity(intent)
         }
     }
 
+    private fun getImageFromGalerry() {
+        val intent = Intent(Intent.ACTION_PICK)
+        intent.type = "image/*"
+        startActivityForResult(intent, REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
+            try {
+                if (data != null) {
+                    fillPath = data.data
+                    binding.tvSetFillPath.text = fillPath?.path.toString()
+                } else {
+                    Toast.makeText(this, "Data photo is null", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun uploadImageToFireStorage() {
+        val firebaseStorage = FirebaseStorage.getInstance()
+        val fileName = UUID.randomUUID()
+        val refStorage = firebaseStorage.reference.child("/image_post_event/${fileName}.jpg")
+
+        // Compress image
+        val reduceImage: ByteArray = bytes(fillPath.toString())
+
+        refStorage.putBytes(reduceImage).addOnSuccessListener { uploadTask ->
+            uploadTask.storage.downloadUrl.addOnSuccessListener { imageUri ->
+                // Get Uri Image to upload firestore
+                exampleStoreDataToFireStore(imageUri.toString())
+
+            }.addOnFailureListener { imgUriExc ->
+                Toast.makeText(this, imgUriExc.localizedMessage, Toast.LENGTH_SHORT).show()
+            }
+        }.addOnFailureListener { uploadTaskExc ->
+            Toast.makeText(this, uploadTaskExc.localizedMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun bytes(fillPath: String): ByteArray {
+        val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, fillPath.toUri())
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
+        return byteArrayOutputStream.toByteArray()
+    }
+
     private fun setFormEvent() {
+
         binding.eventName.outlinedTextFieldEvent.hint = "Event Name"
         binding.eventLocation.outlinedTextFieldEvent.hint = "Location"
         binding.eventLocation.outlinedTextFieldEvent.endIconMode = END_ICON_CUSTOM
@@ -87,6 +164,8 @@ class CreateEventActivity : AppCompatActivity() {
                 val formattedDate =
                     SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectDate)
                 binding.eventDate.outlinedTextFieldEvent.editText?.setText(formattedDate)
+
+                dataDate = formattedDate
             }
         }
 
@@ -109,6 +188,8 @@ class CreateEventActivity : AppCompatActivity() {
                 val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
 
                 binding.eventTime.outlinedTextFieldEvent.editText?.setText(formattedTime)
+
+                dataTime = formattedTime
             }
         }
 
@@ -125,37 +206,49 @@ class CreateEventActivity : AppCompatActivity() {
         }
     }
 
-    private fun exampleStoreDataToFireStore() {
-        val event = Event(
-            id = UniqueIdGenerator.generateUniqueId(),
-            title = RandomTitleGenerator.generateRandomTitle(),
-            address = "Kecamatan Bekasi Selatan, Indonesia",
-            image = "https://i.pinimg.com/564x/0a/ad/42/0aad421488bbc7befa490bad2ac6ef8f.jpg"
-        )
+    private fun exampleStoreDataToFireStore(imageUri: String) {
 
-        lifecycleScope.launch {
-            val result = eventViewModel.insertEvent(event)
-            result.onSuccess {
-                if (result.isSuccess) {
+        userViewModel.userId.observe(this) { userId ->
+
+            val event = Event(
+                id = UniqueIdGenerator.generateUniqueId(),
+                title = binding.eventName.editTextCreateEvent.text.toString(),
+                address = binding.eventLocation.editTextCreateEvent.text.toString(),
+                image = imageUri,
+                date = dataDate,
+                time = dataTime,
+                createdBy = userId
+            )
+
+            lifecycleScope.launch {
+                val result = eventViewModel.insertEvent(event)
+                result.onSuccess {
+                    if (result.isSuccess) {
+                        Toast.makeText(
+                            this@CreateEventActivity,
+                            "Success Store Data ${event.id}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            this@CreateEventActivity,
+                            "Gagal Store Data ${event.id}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }.onFailure {
                     Toast.makeText(
                         this@CreateEventActivity,
-                        "Success Store Data ${event.id}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Toast.makeText(
-                        this@CreateEventActivity,
-                        "Gagal Store Data ${event.id}",
+                        "Failure Store Data kesalahan ${it.localizedMessage}",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
-            }.onFailure {
-                Toast.makeText(
-                    this@CreateEventActivity,
-                    "Failure Store Data kesalahan ${it.localizedMessage}",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
+
         }
+    }
+
+    companion object {
+        const val REQUEST_CODE = 101
     }
 }
