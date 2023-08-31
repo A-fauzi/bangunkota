@@ -10,6 +10,7 @@ import com.bangunkota.bangunkota.utils.UserPreferencesManager
 class UserViewModelFactory(private val preferencesManager: UserPreferencesManager): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(UserViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
             return UserViewModel(preferencesManager) as T
         }
         throw IllegalArgumentException("Unknwon ViewModel Class")

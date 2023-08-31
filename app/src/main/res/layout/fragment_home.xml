@@ -76,7 +76,8 @@
                 android:text="All upcomming event ✨"
                 android:textColor="@color/black"
                 android:textSize="@dimen/title_size"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:layout_marginBottom="@dimen/margin_8"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_event"

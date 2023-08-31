@@ -37,10 +37,11 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/sign_in_button"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cornerRadius="@dimen/button_radius"
             android:text="Sign in"
-            app:icon="@drawable/icons8_google"/>
+            android:layout_marginTop="@dimen/margin_8"
+            android:padding="@dimen/btn_padding"/>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

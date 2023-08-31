@@ -13,8 +13,8 @@
         android:title="Map" />
 
     <item
-        android:id="@+id/accountFragment"
+        android:id="@+id/communityFragment"
         android:enabled="true"
-        android:icon="@drawable/account_selector"
-        android:title="Account" />
+        android:icon="@drawable/community_filled"
+        android:title="Community" />
 </menu>

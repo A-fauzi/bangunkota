@@ -15,10 +15,10 @@
             app:destination="@id/mapsEventFragment" />
     </fragment>
     <fragment
-        android:id="@+id/accountFragment"
-        android:name="com.bangunkota.bangunkota.presentation.view.main.fragment.AccountFragment"
-        android:label="fragment_account"
-        tools:layout="@layout/fragment_account" />
+        android:id="@+id/communityFragment"
+        android:name="com.bangunkota.bangunkota.presentation.view.main.fragment.CommunityFragment"
+        android:label="fragment_community"
+        tools:layout="@layout/fragment_community" />
     <fragment
         android:id="@+id/mapsEventFragment"
         android:name="com.bangunkota.bangunkota.presentation.view.main.fragment.MapsEventFragment"
@@ -26,6 +26,6 @@
         tools:layout="@layout/fragment_maps_event" >
         <action
             android:id="@+id/action_mapsEventFragment2_to_accountFragment"
-            app:destination="@id/accountFragment" />
+            app:destination="@id/communityFragment" />
     </fragment>
 </navigation>

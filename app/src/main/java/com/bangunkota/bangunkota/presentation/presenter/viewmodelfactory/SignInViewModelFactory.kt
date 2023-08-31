@@ -8,6 +8,7 @@ import com.bangunkota.bangunkota.presentation.presenter.viewmodel.SignInViewMode
 class SignInViewModelFactory(private val signInUseCase: SignInUseCase): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SignInViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
             return SignInViewModel(signInUseCase) as T
         }
         throw IllegalArgumentException("Unknwon ViewModel Class")
