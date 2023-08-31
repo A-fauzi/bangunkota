@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
@@ -21,6 +22,7 @@ import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
 import com.bangunkota.bangunkota.domain.entity.Event
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
 import com.bangunkota.bangunkota.presentation.adapter.EventPagingAdapter
+import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.MyLocationViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
@@ -108,7 +110,22 @@ class HomeFragment : Fragment() {
         binding.rvEvent.apply {
             layoutManager =
                 LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
-            adapter = eventAdapter
+            adapter = eventAdapter.withLoadStateHeaderAndFooter(
+                header = LoadStateAdapter {eventAdapter.retry()},
+                footer = LoadStateAdapter {eventAdapter.retry()}
+            )
+        }
+
+        eventAdapter.addLoadStateListener { combinedLoadStates ->
+            val isLoading = combinedLoadStates.refresh is LoadState.Loading
+
+            if (isLoading) {
+                binding.rvEvent.visibility = View.GONE
+                binding.progressbar.visibility = View.VISIBLE
+            } else {
+                binding.rvEvent.visibility = View.VISIBLE
+                binding.progressbar.visibility = View.GONE
+            }
         }
     }
 

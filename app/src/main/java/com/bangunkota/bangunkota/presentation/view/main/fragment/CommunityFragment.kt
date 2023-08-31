@@ -27,6 +27,13 @@ class CommunityFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setTopAppBar()
+        onClickViews()
+    }
+
+    private fun onClickViews() {
+        binding.fabUpScroll.setOnClickListener {
+            binding.nestedScrollView.smoothScrollTo(0,0)
+        }
     }
 
     private fun setTopAppBar() {

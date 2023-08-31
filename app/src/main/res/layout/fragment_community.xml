@@ -13,6 +13,7 @@
 
     <!-- Note: A RecyclerView can also be used -->
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/nested_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingStart="@dimen/padding_8"
@@ -40,11 +41,11 @@
                     <androidx.cardview.widget.CardView
                         android:layout_width="75dp"
                         android:layout_height="75dp"
-                        app:cardCornerRadius="50dp"
-                        app:cardElevation="4dp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground">
+                        android:foreground="?attr/selectableItemBackground"
+                        app:cardCornerRadius="50dp"
+                        app:cardElevation="4dp">
 
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
@@ -114,6 +115,181 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
+                    <include
+                        layout="@layout/item_stories_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/margin_8" />
+
                 </LinearLayout>
             </HorizontalScrollView>
 
@@ -160,9 +336,168 @@
 
             <include layout="@layout/item_community_post" />
 
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
+            <include layout="@layout/item_community_post" />
+
         </LinearLayout>
 
 
     </androidx.core.widget.NestedScrollView>
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_up_scroll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/margin_16"
+        android:contentDescription="TODO"
+        android:src="@drawable/angle_circle_up"
+        app:tint="@color/white" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

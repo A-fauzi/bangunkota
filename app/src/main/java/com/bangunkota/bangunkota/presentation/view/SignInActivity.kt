@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.Observer
@@ -59,7 +60,8 @@ class SignInActivity : AppCompatActivity() {
             signIn()
         }
 
-        viewModel.signInResult.observe(this, Observer { result ->
+        viewModel.signInResult.observe(this) { result ->
+
             if (result.isSuccess) {
                 // Sign-in successful, navigate to MainActivity
                 Toast.makeText(this, "Selamat Datang", Toast.LENGTH_SHORT).show()
@@ -72,8 +74,11 @@ class SignInActivity : AppCompatActivity() {
                 val errorMessage = exception?.localizedMessage ?: "Sign-in failed"
                 Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
 
+                binding.progressbar.visibility = View.GONE
+                binding.signInButton.visibility = View.VISIBLE
+
             }
-        })
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -103,6 +108,9 @@ class SignInActivity : AppCompatActivity() {
     }
 
     private fun signIn() {
+        binding.progressbar.visibility = View.VISIBLE
+        binding.signInButton.visibility = View.GONE
+
         val signInIntent = mGoogleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
@@ -119,6 +127,9 @@ class SignInActivity : AppCompatActivity() {
                 viewModel.signIn(account)
 
             }catch (e: ApiException) {
+                binding.progressbar.visibility = View.GONE
+                binding.signInButton.visibility = View.VISIBLE
+
                 Toast.makeText(this, "Login Failed", Toast.LENGTH_SHORT).show()
             }
         }
