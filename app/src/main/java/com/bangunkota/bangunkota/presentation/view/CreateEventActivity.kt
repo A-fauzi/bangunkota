@@ -139,8 +139,8 @@ class CreateEventActivity : AppCompatActivity() {
 
     private fun setFormEvent() {
 
-        binding.eventName.outlinedTextFieldEvent.hint = "Event Name"
-        binding.eventLocation.outlinedTextFieldEvent.hint = "Location"
+        binding.eventName.editTextCreateEvent.hint = "Charity child people"
+        binding.eventLocation.editTextCreateEvent.hint = "Bekasi, Jawabarat"
         binding.eventLocation.outlinedTextFieldEvent.endIconMode = END_ICON_CUSTOM
         binding.eventLocation.outlinedTextFieldEvent.endIconDrawable =
             ResourcesCompat.getDrawable(resources, R.drawable.marker__1_, null)
@@ -148,7 +148,7 @@ class CreateEventActivity : AppCompatActivity() {
 //            val placeAutoComplete = Place
         }
 
-        binding.eventDate.outlinedTextFieldEvent.hint = "Date"
+        binding.eventDate.editTextCreateEvent.hint = "2023-08-31"
         binding.eventDate.outlinedTextFieldEvent.endIconMode = END_ICON_CUSTOM
         binding.eventDate.outlinedTextFieldEvent.endIconDrawable =
             ResourcesCompat.getDrawable(resources, R.drawable.calendar, null)
@@ -158,7 +158,7 @@ class CreateEventActivity : AppCompatActivity() {
                 .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                 .build()
 
-            datePicker.show(supportFragmentManager, "date")
+            datePicker.show(supportFragmentManager, "17:00")
             datePicker.addOnPositiveButtonClickListener {
                 val selectDate = Date(it)
                 val formattedDate =
@@ -169,7 +169,7 @@ class CreateEventActivity : AppCompatActivity() {
             }
         }
 
-        binding.eventTime.outlinedTextFieldEvent.hint = "Time"
+        binding.eventTime.editTextCreateEvent.hint = "Time"
         binding.eventTime.outlinedTextFieldEvent.endIconMode = END_ICON_CUSTOM
         binding.eventTime.outlinedTextFieldEvent.endIconDrawable =
             ResourcesCompat.getDrawable(resources, R.drawable.clock, null)
