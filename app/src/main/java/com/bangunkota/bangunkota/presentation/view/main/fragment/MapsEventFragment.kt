@@ -12,8 +12,11 @@ import android.view.ViewGroup
 import android.view.animation.AnticipateOvershootInterpolator
 import android.widget.Toast
 import android.widget.ZoomButtonsController
+import androidx.lifecycle.ViewModelProvider
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.databinding.FragmentMapsEventBinding
+import com.bangunkota.bangunkota.presentation.presenter.viewmodel.MyLocationViewModel
+import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.MyLocationViewModelFactory
 import com.bangunkota.bangunkota.utils.MyLocation
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -63,7 +66,7 @@ class MapsEventFragment : Fragment(), OnMapClickListener {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireActivity(), Locale.getDefault())
-        myLocation = MyLocation(requireActivity(), fusedLocationClient, geocoder)
+        myLocation = MyLocation(requireActivity(), fusedLocationClient)
 
         mapViewBehaviour()
 
@@ -127,16 +130,26 @@ class MapsEventFragment : Fragment(), OnMapClickListener {
         super.onStart()
         mapView?.onStart()
 
-        myLocation.getLastLocation({
-            if (it != null) {
+        getLastLocation()
+    }
 
+    private fun getLastLocation() {
+        val myLocation = MyLocation(requireActivity(), fusedLocationClient)
+        val viewModel = ViewModelProvider(
+            this,
+            MyLocationViewModelFactory(myLocation)
+        )[MyLocationViewModel::class.java]
+
+        // Observasi LiveData untuk mendapatkan perubahan lokasi
+        viewModel.locationLiveData.observe(this) { location ->
+            if (location != null) {
                 binding.animationView.visibility = View.GONE
                 binding.tvLoadingMap.visibility = View.GONE
 
-                addAnnotationMap(mapView, it.latitude, it.longitude)
+                addAnnotationMap(mapView, location.latitude, location.longitude)
 
                 val cameraOpt = cameraOptions {
-                    center(Point.fromLngLat(it.longitude, it.latitude))
+                    center(Point.fromLngLat(location.longitude, location.latitude))
                     zoom(12.5)
                     pitch(60.0)
                     bearing(130.0)
@@ -149,11 +162,13 @@ class MapsEventFragment : Fragment(), OnMapClickListener {
                     }
                 )
             } else {
-                Toast.makeText(requireActivity(), "Tungguin, Lagi nyari lokasi!", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireActivity(), "Tungguin, Lagi nyari lokasi!", Toast.LENGTH_LONG)
+                    .show()
             }
-        }, {
-            Toast.makeText(requireActivity(), "Lokasi Error ${it.localizedMessage}!", Toast.LENGTH_LONG).show()
-        })
+        }
+
+        // Panggil fungsi dalam ViewModel untuk mendapatkan lokasi
+        viewModel.getLastLocation()
     }
 
     override fun onStop() {

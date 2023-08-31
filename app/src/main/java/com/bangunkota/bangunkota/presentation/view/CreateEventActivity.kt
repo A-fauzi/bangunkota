@@ -1,36 +1,64 @@
 package com.bangunkota.bangunkota.presentation.view
 
+import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.bangunkota.bangunkota.R
+import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
 import com.bangunkota.bangunkota.databinding.ActivityCreateEventBinding
+import com.bangunkota.bangunkota.domain.entity.Event
+import com.bangunkota.bangunkota.domain.usecase.EventUseCase
+import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
+import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
+import com.bangunkota.bangunkota.presentation.view.main.MainActivity
+import com.bangunkota.bangunkota.utils.RandomTitleGenerator
+import com.bangunkota.bangunkota.utils.UniqueIdGenerator
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.textfield.TextInputLayout.END_ICON_CUSTOM
 import com.google.android.material.textfield.TextInputLayout.END_ICON_NONE
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 class CreateEventActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCreateEventBinding
+    private lateinit var eventViewModel: EventViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityCreateEventBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val eventRepository = EventRepositoryImpl()
+        val eventUseCase = EventUseCase(eventRepository)
+        val viewModelFactory = EventViewModelFactory(eventUseCase)
+        eventViewModel = ViewModelProvider(this, viewModelFactory)[EventViewModel::class.java]
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onStart() {
         super.onStart()
 
         topAppBarBehaviour()
         setFormEvent()
+
+        binding.btnCreateEvent.setOnClickListener {
+            exampleStoreDataToFireStore()
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+        }
     }
 
     private fun setFormEvent() {
@@ -56,7 +84,8 @@ class CreateEventActivity : AppCompatActivity() {
             datePicker.show(supportFragmentManager, "date")
             datePicker.addOnPositiveButtonClickListener {
                 val selectDate = Date(it)
-                val formattedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectDate)
+                val formattedDate =
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectDate)
                 binding.eventDate.outlinedTextFieldEvent.editText?.setText(formattedDate)
             }
         }
@@ -85,7 +114,6 @@ class CreateEventActivity : AppCompatActivity() {
 
     }
 
-
     private fun topAppBarBehaviour() {
         binding.appBarLayout.topAppBar.title = "Create Event"
         binding.appBarLayout.topAppBar.menu.findItem(R.id.account).isVisible = false
@@ -94,6 +122,40 @@ class CreateEventActivity : AppCompatActivity() {
 
         binding.appBarLayout.topAppBar.setNavigationOnClickListener {
             Toast.makeText(this, "Menu Clicked", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun exampleStoreDataToFireStore() {
+        val event = Event(
+            id = UniqueIdGenerator.generateUniqueId(),
+            title = RandomTitleGenerator.generateRandomTitle(),
+            address = "Kecamatan Bekasi Selatan, Indonesia",
+            image = "https://i.pinimg.com/564x/0a/ad/42/0aad421488bbc7befa490bad2ac6ef8f.jpg"
+        )
+
+        lifecycleScope.launch {
+            val result = eventViewModel.insertEvent(event)
+            result.onSuccess {
+                if (result.isSuccess) {
+                    Toast.makeText(
+                        this@CreateEventActivity,
+                        "Success Store Data ${event.id}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(
+                        this@CreateEventActivity,
+                        "Gagal Store Data ${event.id}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }.onFailure {
+                Toast.makeText(
+                    this@CreateEventActivity,
+                    "Failure Store Data kesalahan ${it.localizedMessage}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 }

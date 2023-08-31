@@ -8,13 +8,15 @@ import android.location.Location
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class MyLocation(
     private val context: Context,
-    private val fusedLocationProviderClient: FusedLocationProviderClient,
-    private val geocoder: Geocoder
+    private val fusedLocationProviderClient: FusedLocationProviderClient
     ) {
-    fun getLastLocation(onSuccessGetLocation: (location: Location?) -> Unit, onFailureGetLocation: (exception: Exception) -> Unit) {
+    suspend fun getLastLocation(): Location? = suspendCoroutine {
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -25,13 +27,14 @@ class MyLocation(
         ) {
             // Jika izin tidak diberikan, mungkin perlu meminta izin kepada pengguna
             // Anda dapat menggunakan ActivityCompat.requestPermissions() di sini
-            return
+            it.resume(null)
+            return@suspendCoroutine
         }
         fusedLocationProviderClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
             .addOnSuccessListener { location ->
-                onSuccessGetLocation(location)
-            }.addOnFailureListener {
-                onFailureGetLocation(it)
+                it.resume(location)
+            }.addOnFailureListener { exception ->
+                it.resumeWithException(exception)
             }
     }
 }

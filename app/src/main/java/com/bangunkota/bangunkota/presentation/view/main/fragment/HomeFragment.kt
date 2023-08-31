@@ -21,8 +21,10 @@ import com.bangunkota.bangunkota.domain.entity.Event
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
 import com.bangunkota.bangunkota.presentation.adapter.EventPagingAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
+import com.bangunkota.bangunkota.presentation.presenter.viewmodel.MyLocationViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
+import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.MyLocationViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.presentation.view.CreateEventActivity
 import com.bangunkota.bangunkota.presentation.view.SignInActivity
@@ -59,8 +61,6 @@ class HomeFragment : Fragment() {
         binding = FragmentHomeBinding.inflate(layoutInflater, container, false)
 
         initObj()
-
-        exampleStoreDataToFireStore()
         setUpRecyclerView()
         getLastLocation()
 
@@ -72,7 +72,7 @@ class HomeFragment : Fragment() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireActivity(), Locale.getDefault())
-        myLocation = MyLocation(requireActivity(), fusedLocationClient, geocoder)
+        myLocation = MyLocation(requireActivity(), fusedLocationClient)
 
         val userPreferencesManager = UserPreferencesManager(requireActivity())
         val userViewModelFactory = UserViewModelFactory(userPreferencesManager)
@@ -103,40 +103,6 @@ class HomeFragment : Fragment() {
         topAppBarBehaviour()
     }
 
-    private fun exampleStoreDataToFireStore() {
-        val event = Event(
-            id = UniqueIdGenerator.generateUniqueId(),
-            title = RandomTitleGenerator.generateRandomTitle(),
-            address = "Kecamatan Bekasi Selatan, Indonesia",
-            image = "https://i.pinimg.com/564x/0a/ad/42/0aad421488bbc7befa490bad2ac6ef8f.jpg"
-        )
-
-        lifecycleScope.launch {
-            val result = eventViewModel.insertEvent(event)
-            result.onSuccess {
-                if (result.isSuccess) {
-                    Toast.makeText(
-                        requireActivity(),
-                        "Success Store Data ${event.id}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Toast.makeText(
-                        requireActivity(),
-                        "Gagal Store Data ${event.id}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }.onFailure {
-                Toast.makeText(
-                    requireActivity(),
-                    "Failure Store Data kesalahan ${it.localizedMessage}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-    }
-
     private fun setUpRecyclerView() {
         binding.rvEvent.apply {
             layoutManager =
@@ -146,10 +112,19 @@ class HomeFragment : Fragment() {
     }
 
     private fun getLastLocation() {
-        myLocation.getLastLocation({
-            if (it != null) {
-                val lat = it.latitude
-                val long = it.longitude
+
+        val myLocation = MyLocation(requireActivity(), fusedLocationClient)
+        val viewModel = ViewModelProvider(
+            this,
+            MyLocationViewModelFactory(myLocation)
+        )[MyLocationViewModel::class.java]
+
+        // Observasi LiveData untuk mendapatkan perubahan lokasi
+        viewModel.locationLiveData.observe(viewLifecycleOwner) { location ->
+            if (location != null) {
+                // Lokasi ditemukan, lakukan sesuatu
+                val lat = location.latitude
+                val long = location.longitude
                 try {
                     val addresses = geocoder.getFromLocation(lat, long, 1)
                     if (addresses.isNotEmpty()) {
@@ -165,11 +140,14 @@ class HomeFragment : Fragment() {
                     e.printStackTrace()
                 }
             } else {
+                // Izin tidak diberikan atau lokasi tidak ditemukan
                 binding.currentAddress.text = "Address Is Null!"
             }
-        }, {
-            binding.currentAddress.text = it.localizedMessage
-        })
+        }
+
+        // Panggil fungsi dalam ViewModel untuk mendapatkan lokasi
+        viewModel.getLastLocation()
+
     }
 
     private fun topAppBarBehaviour() {
@@ -189,7 +167,8 @@ class HomeFragment : Fragment() {
                     ) {
                         // Konversi Bitmap menjadi Drawable
                         val iconDrawable = BitmapDrawable(resources, resource)
-                        binding.appBarLayout.topAppBar.menu.findItem(R.id.account).icon = iconDrawable
+                        binding.appBarLayout.topAppBar.menu.findItem(R.id.account).icon =
+                            iconDrawable
                     }
 
                     override fun onLoadCleared(placeholder: Drawable?) {
