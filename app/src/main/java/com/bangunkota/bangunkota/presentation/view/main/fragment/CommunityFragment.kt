@@ -118,6 +118,9 @@ class CommunityFragment : Fragment() {
     private fun onClickViews() {
 
         binding.outlineTextfieldProductSpec.setEndIconOnClickListener {
+
+           binding.outlineTextfieldProductSpec.isEnabled = false
+
             val textPost = binding.etPostText.text.toString()
             lifecycleScope.launch {
                 userViewModel.userId.observe(viewLifecycleOwner) { uid ->
@@ -133,11 +136,14 @@ class CommunityFragment : Fragment() {
                         result.onSuccess {
                             if (result.isSuccess) {
                                 adapterPagingList.refresh()
-                                Toast.makeText(requireActivity(), "Success Posting", Toast.LENGTH_SHORT).show()
+                                binding.outlineTextfieldProductSpec.isEnabled = true
+                                binding.etPostText.text?.clear()
                             } else {
+                                binding.outlineTextfieldProductSpec.isEnabled = true
                                 Toast.makeText(requireActivity(), "Gagal Posting", Toast.LENGTH_SHORT).show()
                             }
                         }.onFailure {
+                            binding.outlineTextfieldProductSpec.isEnabled = true
                             Toast.makeText(requireActivity(), "Error Posting ${it.message}", Toast.LENGTH_SHORT).show()
                         }
                     }
