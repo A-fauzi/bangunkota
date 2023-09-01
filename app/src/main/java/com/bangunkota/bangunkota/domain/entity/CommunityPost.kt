@@ -2,6 +2,8 @@ package com.bangunkota.bangunkota.domain.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.firebase.Timestamp
+import java.util.*
 
 
 @Entity(tableName = "community_posts")
@@ -10,4 +12,5 @@ data class CommunityPost(
     val id: String = "",
     val text: String? = null,
     val uid: String? = null,
+    val create_at: Timestamp? = null
 )

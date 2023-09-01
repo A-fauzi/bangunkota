@@ -14,8 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bangunkota.bangunkota.R
-import com.bangunkota.bangunkota.data.datasource.local.AppDatabase
-import com.bangunkota.bangunkota.data.datasource.local.CommunityPostDao
 import com.bangunkota.bangunkota.data.repository.abstractions.CommunityRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.CommunityRepositoryImpl
 import com.bangunkota.bangunkota.databinding.FragmentCommunityBinding
@@ -29,6 +27,7 @@ import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.Communi
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.utils.UniqueIdGenerator
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
+import com.google.firebase.Timestamp
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
@@ -54,7 +53,7 @@ class CommunityFragment : Fragment() {
     private lateinit var repository: CommunityRepository
     private lateinit var recyclerviewPost: RecyclerView
     private lateinit var firestore: FirebaseFirestore
-    private lateinit var communityPostDao: CommunityPostDao
+//    private lateinit var communityPostDao: CommunityPostDao
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -105,8 +104,8 @@ class CommunityFragment : Fragment() {
         userViewModelFactory = UserViewModelFactory(userPreferencesManager)
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
         firestore = FirebaseFirestore.getInstance()
-        communityPostDao = AppDatabase.getInstance(requireActivity()).communityPostDao()
-        repository = CommunityRepositoryImpl(firestore, communityPostDao)
+//        communityPostDao = AppDatabase.getInstance(requireActivity()).communityPostDao()
+        repository = CommunityRepositoryImpl(firestore)
         useCase = CommunityUseCase(repository)
         communityViewModelFactory = CommunityViewModelFactory(useCase)
         communityViewModel = ViewModelProvider(
@@ -125,7 +124,8 @@ class CommunityFragment : Fragment() {
                     val data = CommunityPost(
                         id = UniqueIdGenerator.generateUniqueId(),
                         uid = uid,
-                        text = textPost
+                        text = textPost,
+                        create_at = Timestamp.now()
                     )
 
                     lifecycleScope.launch {

@@ -1,13 +1,15 @@
 package com.bangunkota.bangunkota.data.repository.implementatios
 
 import android.util.Log
-import com.bangunkota.bangunkota.data.datasource.local.CommunityPostDao
 import com.bangunkota.bangunkota.data.repository.abstractions.CommunityRepository
 import com.bangunkota.bangunkota.domain.entity.CommunityPost
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-class CommunityRepositoryImpl(private val firestore: FirebaseFirestore, private val communityPostDao: CommunityPostDao): CommunityRepository {
+class CommunityRepositoryImpl(
+    private val firestore: FirebaseFirestore,
+//    private val communityPostDao: CommunityPostDao
+    ): CommunityRepository {
 //    override suspend fun fetchDataFromFireStoreAndSaveToRoom() {
 //        try {
 //            val querySnapshot = firestore.collection("community_posts").get().await()
