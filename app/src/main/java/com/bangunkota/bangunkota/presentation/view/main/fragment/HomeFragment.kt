@@ -5,13 +5,14 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.location.Geocoder
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
@@ -19,9 +20,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
+import com.bangunkota.bangunkota.databinding.ItemEventBinding
 import com.bangunkota.bangunkota.domain.entity.Event
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
-import com.bangunkota.bangunkota.presentation.adapter.EventPagingAdapter
+import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
 import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.MyLocationViewModel
@@ -54,7 +56,7 @@ class HomeFragment : Fragment() {
     private lateinit var geocoder: Geocoder
     private lateinit var myLocation: MyLocation
 
-    private lateinit var eventAdapter: EventPagingAdapter
+    private lateinit var eventAdapter: AdapterPagingList<Event, ItemEventBinding>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,7 +73,16 @@ class HomeFragment : Fragment() {
     }
 
     private fun initObj() {
-        eventAdapter = EventPagingAdapter(requireActivity())
+        eventAdapter = AdapterPagingList(requireActivity(), { binding, event ->
+            binding.itemTitle.text = event.title
+                binding.itemAddress.text = event.address
+                binding.itemDate.text = event.date
+                binding.itemTime.text = "${event.time} WIB"
+                Glide.with(this@HomeFragment)
+                    .load(event.image)
+                    .error(R.drawable.img_placeholder)
+                    .into(binding.itemImage)
+        }, ItemEventBinding::inflate )
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireActivity(), Locale.getDefault())
@@ -88,6 +99,7 @@ class HomeFragment : Fragment() {
             ViewModelProvider(requireActivity(), viewModelFactory)[EventViewModel::class.java]
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
