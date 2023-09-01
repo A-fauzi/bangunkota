@@ -1,34 +1,56 @@
 package com.bangunkota.bangunkota.data.repository.implementatios
 
 import com.bangunkota.bangunkota.data.repository.abstractions.EventRepository
-import com.bangunkota.bangunkota.domain.entity.Event
+import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 class EventRepositoryImpl: EventRepository {
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
-    override suspend fun insertData(data: Event): Result<Unit> {
+    override suspend fun getEventById(eventId: String): CommunityEvent? {
         return try {
-            val document = firestore.collection("events").document(data.id.toString())
+            val documentSnapshot = firestore.collection("events").document(eventId).get().await()
+            documentSnapshot.toObject(CommunityEvent::class.java)
+        } catch (e: Exception) {
+            // Handle error
+            null // Atau Anda bisa melempar Exception sesuai kebutuhan
+        }
+    }
+
+    override suspend fun addEvent(event: CommunityEvent): Result<Unit> {
+        return try {
+            val document = firestore.collection("events").document(event.id.toString())
             document
-                .set(data)
+                .set(event)
                 .await() // Tunggu hingga operasi selesai
 
             Result.success(Unit)
         }catch (e: Exception) {
             Result.failure(e)
         }
-
     }
 
-    override suspend fun updateData(data: Event) {
-        val document = firestore.collection("events").document(data.id.toString())
-        document.set(data)
+    override suspend fun updateEvent(event: CommunityEvent): Result<Unit> {
+        return try {
+            val document = firestore.collection("events").document(event.id.toString())
+            document
+                .set(event)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
-    override suspend fun deleteData(dataId: String) {
-        val document = firestore.collection("events").document(dataId)
-        document.set(dataId)
+    override suspend fun deleteEvent(eventId: String): Result<Unit> {
+        return try {
+            val document = firestore.collection("events").document(eventId)
+            document.delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

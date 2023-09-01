@@ -1,10 +1,17 @@
 package com.bangunkota.bangunkota.data.repository.abstractions
 
-import com.bangunkota.bangunkota.domain.entity.Event
+import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 
 interface EventRepository {
-    suspend fun insertData(data: Event): Result<Unit>
-    suspend fun updateData(data: Event)
-    suspend fun deleteData(dataId: String)
-//    suspend fun getData(): List<YourDataModel>  by id harus nya
+    // Menampilkan detail event berdasarkan ID
+    suspend fun getEventById(eventId: String): CommunityEvent?
+
+    // Menambahkan event baru
+    suspend fun addEvent(event: CommunityEvent): Result<Unit>
+
+    // Memperbarui informasi event
+    suspend fun updateEvent(event: CommunityEvent): Result<Unit>
+
+    // Menghapus event berdasarkan ID
+    suspend fun deleteEvent(eventId: String): Result<Unit>
 }

@@ -3,7 +3,7 @@ package com.bangunkota.bangunkota.domain.entity
 import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
 
-data class Event(
+data class CommunityEvent(
     val id: String? = null,
     val title: String? = null,
     val address: String? = null,

@@ -21,7 +21,7 @@ import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
 import com.bangunkota.bangunkota.databinding.ItemEventBinding
-import com.bangunkota.bangunkota.domain.entity.Event
+import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
 import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
@@ -56,7 +56,7 @@ class HomeFragment : Fragment() {
     private lateinit var geocoder: Geocoder
     private lateinit var myLocation: MyLocation
 
-    private lateinit var eventAdapter: AdapterPagingList<Event, ItemEventBinding>
+    private lateinit var eventAdapter: AdapterPagingList<CommunityEvent, ItemEventBinding>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -95,8 +95,7 @@ class HomeFragment : Fragment() {
         val eventRepository = EventRepositoryImpl()
         val eventUseCase = EventUseCase(eventRepository)
         val viewModelFactory = EventViewModelFactory(eventUseCase)
-        eventViewModel =
-            ViewModelProvider(requireActivity(), viewModelFactory)[EventViewModel::class.java]
+        eventViewModel = ViewModelProvider(requireActivity(), viewModelFactory)[EventViewModel::class.java]
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -104,7 +103,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         lifecycleScope.launch {
-            eventViewModel.flow.collect { pagingData ->
+            eventViewModel.getEvents.collect { pagingData ->
                 eventAdapter.submitData(pagingData)
             }
         }

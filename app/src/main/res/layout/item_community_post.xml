@@ -34,6 +34,7 @@
                 android:layout_marginStart="@dimen/margin_16">
 
                 <TextView
+                    android:id="@+id/item_name_user"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Anonymous name"
@@ -42,6 +43,7 @@
                     android:textStyle="bold"/>
 
                 <TextView
+                    android:id="@+id/item_email_user"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Username@gmail.com"/>
@@ -58,6 +60,7 @@
         </RelativeLayout>
 
         <TextView
+            android:id="@+id/tv_text_post"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/lorem"

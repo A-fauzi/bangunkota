@@ -17,7 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
 import com.bangunkota.bangunkota.databinding.ActivityCreateEventBinding
-import com.bangunkota.bangunkota.domain.entity.Event
+import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
@@ -87,11 +87,6 @@ class CreateEventActivity : AppCompatActivity() {
             binding.progressbar.visibility = View.VISIBLE
 
             uploadImageToFireStorage()
-
-    //            exampleStoreDataToFireStore()
-    //            val intent = Intent(this, MainActivity::class.java)
-    //            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-    //            startActivity(intent)
         }
         binding.eventLocation.outlinedTextFieldEvent.setEndIconOnClickListener {
 //            val placeAutoComplete = Place
@@ -290,8 +285,8 @@ class CreateEventActivity : AppCompatActivity() {
     private fun setDataEvent(
         imageUri: String,
         userId: String?
-    ): Event {
-        return Event(
+    ): CommunityEvent {
+        return CommunityEvent(
             id = UniqueIdGenerator.generateUniqueId(),
             title = binding.eventName.editTextCreateEvent.text.toString(),
             address = binding.eventLocation.editTextCreateEvent.text.toString(),
