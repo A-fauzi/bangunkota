@@ -6,6 +6,7 @@ import java.util.Date
 data class CommunityEvent(
     val id: String? = null,
     val title: String? = null,
+    val description: String? = null,
     val address: String? = null,
     val image: String? = null,
     val date: String? = null,

@@ -329,7 +329,8 @@ class CreateEventActivity : AppCompatActivity() {
             image = imageUri,
             date = dataDate,
             time = dataTime,
-            createdBy = userId
+            createdBy = userId,
+            description = binding.etDescription.text.toString()
         )
     }
 

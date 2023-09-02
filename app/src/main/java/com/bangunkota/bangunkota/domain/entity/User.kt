@@ -8,11 +8,12 @@ data class User(
     val name: String? = null,
     val email: String? = null,
     val photoUrl: String? = null,
+    val birthday: String? = null,
 
     @ServerTimestamp
     val dateJoin: Date? = null,
-    val myEvents: List<CommunityEvent>? = null,
-    val createEvents: List<CommunityEvent>? = null,
+    val myEvents: List<String>? = null,
+    val createEvents: List<String>? = null,
 
     @ServerTimestamp
     val created_at: Date? = null,
