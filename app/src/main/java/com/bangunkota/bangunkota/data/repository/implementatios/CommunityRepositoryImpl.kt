@@ -1,8 +1,8 @@
 package com.bangunkota.bangunkota.data.repository.implementatios
 
-import android.util.Log
 import com.bangunkota.bangunkota.data.repository.abstractions.CommunityRepository
-import com.bangunkota.bangunkota.domain.entity.CommunityPost
+import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
+import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -25,6 +25,19 @@ class CommunityRepositoryImpl(
             val document = firestore.collection("community_posts").document(post.id.toString())
             document
                 .set(post)
+                .await() // Tunggu hingga operasi selesai
+
+            Result.success(Unit)
+        }catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun addLikePost(data: UserLikePost): Result<Unit> {
+        return try {
+            val document = firestore.collection("community_like_post").document(data.id.toString())
+            document
+                .set(data)
                 .await() // Tunggu hingga operasi selesai
 
             Result.success(Unit)

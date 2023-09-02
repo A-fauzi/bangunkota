@@ -21,8 +21,9 @@ import com.bangunkota.bangunkota.data.repository.implementatios.CommunityReposit
 import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.FragmentCommunityBinding
 import com.bangunkota.bangunkota.databinding.ItemCommunityPostBinding
-import com.bangunkota.bangunkota.domain.entity.CommunityPost
+import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
 import com.bangunkota.bangunkota.domain.entity.User
+import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
 import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
@@ -305,6 +306,26 @@ class CommunityFragment : Fragment() {
                             .error(R.drawable.img_placeholder)
                             .into(binding.itemIvProfile)
 
+                        var isLoved = false
+                        binding.btnLove.setOnClickListener {
+                            val postId = post.id
+                            val currentUserId = user?.uid.toString()
+
+                            if (isLoved) {
+                                binding.btnLove.setImageResource(R.drawable.heart_outline)
+                                Toast.makeText(requireActivity(), "Batal Menyukai", Toast.LENGTH_SHORT).show()
+
+                                // Handle deleted data like in document
+                            } else {
+                                binding.btnLove.setImageResource(R.drawable.heart_filled)
+                                Toast.makeText(requireActivity(), "Kamu Menyukai ini", Toast.LENGTH_SHORT).show()
+
+//                                insertDataLikePost(postId)
+                            }
+
+                            isLoved = !isLoved
+                        }
+
 
                     }
                 }
@@ -365,6 +386,27 @@ class CommunityFragment : Fragment() {
                 }
             }.onFailure {
                 binding.outlineTextfieldProductSpec.isEnabled = true
+                message.toastMsg("Error Posting ${it.message}")
+            }
+        }
+    }
+
+    private fun insertDataLikePost(postId: String) {
+        val data = UserLikePost(
+            id = UniqueIdGenerator.generateUniqueId(),
+            postId = postId,
+            userId = user?.uid.toString(),
+            createdAt = Timestamp.now()
+        )
+        lifecycleScope.launch {
+            val result = communityViewModel.insertLikePost(data)
+            result.onSuccess {
+                if (result.isSuccess) {
+                    message.toastMsg("Post success your like")
+                } else {
+                    message.toastMsg("Gagal Menyukai")
+                }
+            }.onFailure {
                 message.toastMsg("Error Posting ${it.message}")
             }
         }

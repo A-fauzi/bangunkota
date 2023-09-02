@@ -1,7 +1,7 @@
 package com.bangunkota.bangunkota.data.repository.abstractions
 
-import androidx.lifecycle.LiveData
-import com.bangunkota.bangunkota.domain.entity.CommunityPost
+import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
+import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
 
 interface CommunityRepository {
     // get data firestore
@@ -12,6 +12,9 @@ interface CommunityRepository {
 
     // Menambahkan post baru
     suspend fun addPost(post: CommunityPost): Result<Unit>
+
+    // Menambahkan post baru
+    suspend fun addLikePost(post: UserLikePost): Result<Unit>
 
     // Memperbarui informasi post
     suspend fun updatePost(post: CommunityPost): Result<Unit>

@@ -1,4 +1,4 @@
-package com.bangunkota.bangunkota.domain.entity
+package com.bangunkota.bangunkota.domain.entity.community_post
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

@@ -7,7 +7,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.bangunkota.bangunkota.data.datasource.PagingSource
-import com.bangunkota.bangunkota.domain.entity.CommunityPost
+import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
+import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
 import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -34,6 +35,10 @@ class CommunityViewModel(private val communityUseCase: CommunityUseCase): ViewMo
 
     suspend fun insertPost(data: CommunityPost): Result<Unit> {
         return communityUseCase.insertData(data)
+    }
+
+    suspend fun insertLikePost(data: UserLikePost): Result<Unit> {
+        return communityUseCase.insertLikePost(data)
     }
 
     suspend fun updatePost(data: CommunityPost) {

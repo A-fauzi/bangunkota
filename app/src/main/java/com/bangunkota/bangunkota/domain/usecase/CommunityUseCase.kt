@@ -1,8 +1,8 @@
 package com.bangunkota.bangunkota.domain.usecase
 
-import androidx.lifecycle.LiveData
 import com.bangunkota.bangunkota.data.repository.abstractions.CommunityRepository
-import com.bangunkota.bangunkota.domain.entity.CommunityPost
+import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
+import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
 
 class CommunityUseCase(private val repository: CommunityRepository) {
 
@@ -13,6 +13,10 @@ class CommunityUseCase(private val repository: CommunityRepository) {
 
     suspend fun insertData(data: CommunityPost): Result<Unit> {
         return repository.addPost(data)
+    }
+
+    suspend fun insertLikePost(data: UserLikePost): Result<Unit> {
+        return repository.addLikePost(data)
     }
 
     suspend fun updateData(data: CommunityPost) {
