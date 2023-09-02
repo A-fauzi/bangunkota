@@ -2,7 +2,6 @@ package com.bangunkota.bangunkota.presentation.view.main.fragment
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -155,14 +154,24 @@ class CommunityFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Dapatkan ID pengguna
-        val userID = user?.uid
+        checkingUserDocument()
+        setTopAppBar()
+        onClickViews()
+        setUpViewModels()
+        setUpRecyclerView()
+        //        communityViewModel.fetchDataAndSaveToRoom()
 
-        // Dapatkan instance Firebase Firestore
-        val db = FirebaseFirestore.getInstance()
+    }
+
+
+    /**
+     * Ceck user and condition if exists or not exists
+     */
+    private fun checkingUserDocument() {
+        val uid = user?.uid.toString()
 
         // Buat referensi ke dokumen pengguna di Firestore
-        val userRef = db.collection("users").document(userID.toString())
+        val userRef = firestore.collection("users").document(uid)
 
         // Lakukan pengecekan apakah dokumen pengguna sudah ada di Firestore
         userRef.get().addOnCompleteListener { task ->
@@ -184,40 +193,20 @@ class CommunityFragment : Fragment() {
                     userRef.set(userData)
                         .addOnSuccessListener {
                             // Data pengguna berhasil dimasukkan ke Firestore
-                            Toast.makeText(
-                                requireActivity(),
-                                "Data Pengguna berhasil di simpan",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            message.toastMsg("Data Pengguna berhasil di simpan")
                         }
                         .addOnFailureListener { exception ->
                             // Penanganan kesalahan jika gagal memasukkan data
-                            Toast.makeText(
-                                requireActivity(),
-                                "Data Pengguna gagal di simpan",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            message.toastMsg("Data Pengguna gagal di simpan")
                         }
                 } else {
                     // Jika pengguna sudah ada di database
                 }
             } else {
                 // Pengguna belum masuk, Anda harus menangani kasus ini sesuai dengan kebutuhan Anda
-                Toast.makeText(
-                    requireActivity(),
-                    "Kesalahan mengambil dokument pengguna, pengguna belum masuk",
-                    Toast.LENGTH_SHORT
-                ).show()
+                message.toastMsg("Kesalahan mengambil dokument pengguna, pengguna belum masuk")
             }
         }
-
-
-        setTopAppBar()
-        onClickViews()
-        setUpViewModels()
-        setUpRecyclerView()
-        //        communityViewModel.fetchDataAndSaveToRoom()
-
     }
 
     /**
