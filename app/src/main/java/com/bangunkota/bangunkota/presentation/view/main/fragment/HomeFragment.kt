@@ -18,11 +18,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bangunkota.bangunkota.R
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
+import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
+import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
 import com.bangunkota.bangunkota.databinding.ItemEventBinding
 import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
+import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
 import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
@@ -41,6 +45,7 @@ import com.bumptech.glide.request.transition.Transition
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import okio.IOException
 import java.util.*
@@ -57,6 +62,33 @@ class HomeFragment : Fragment() {
     private lateinit var myLocation: MyLocation
 
     private lateinit var eventAdapter: AdapterPagingList<CommunityEvent, ItemEventBinding>
+
+    /**
+     * USER PREFERENCES
+     */
+    private lateinit var userPreferencesManager: UserPreferencesManager
+
+    /**
+     * USER VIEWMODEL FACTORY
+     */
+    private lateinit var userViewModelFactory: UserViewModelFactory
+
+
+    /**
+     * USER USECASE
+     */
+    private lateinit var userUseCase: UserUseCase
+
+    /**
+     * USER REPOSITORY
+     */
+    private lateinit var userRepository: UserRepository
+
+    /**
+     * FIRESTORE MANAGER
+     */
+    private lateinit var fireStoreManager: FireStoreManager
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -88,9 +120,16 @@ class HomeFragment : Fragment() {
         geocoder = Geocoder(requireActivity(), Locale.getDefault())
         myLocation = MyLocation(requireActivity(), fusedLocationClient)
 
-        val userPreferencesManager = UserPreferencesManager(requireActivity())
-        val userViewModelFactory = UserViewModelFactory(userPreferencesManager)
+        val fireStore = FirebaseFirestore.getInstance()
+        fireStoreManager = FireStoreManager(fireStore)
+
+        // USER CONFIG
+        userPreferencesManager = UserPreferencesManager(requireActivity())
+        userRepository = UserRepositoryImpl(fireStoreManager)
+        userUseCase = UserUseCase(userRepository)
+        userViewModelFactory = UserViewModelFactory(userPreferencesManager, userUseCase)
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
+
 
         val eventRepository = EventRepositoryImpl()
         val eventUseCase = EventUseCase(eventRepository)

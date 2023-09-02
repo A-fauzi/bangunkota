@@ -6,7 +6,7 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.tasks.await
 
-class FireStorePagingManager(private val firestore: FirebaseFirestore) {
+class FireStoreManager(private val firestore: FirebaseFirestore) {
     suspend fun getInitialPage(collectionPath: String, pageSize: Int): QuerySnapshot {
         return firestore.collection(collectionPath)
             .limit(pageSize.toLong())
@@ -20,6 +20,13 @@ class FireStorePagingManager(private val firestore: FirebaseFirestore) {
             .limit(pageSize.toLong())
             .orderBy("create_at", Query.Direction.DESCENDING)
             .startAfter(lastDocumentSnapshot)
+            .get()
+            .await()
+    }
+
+    suspend fun getDocumentById(collectionPath: String, id: String): DocumentSnapshot {
+        return firestore.collection(collectionPath)
+            .document(id)
             .get()
             .await()
     }

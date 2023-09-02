@@ -1,22 +1,19 @@
 package com.bangunkota.bangunkota.presentation.presenter.viewmodel
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
-import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStorePagingManager
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.bangunkota.bangunkota.data.datasource.PagingSource
 import com.bangunkota.bangunkota.domain.entity.CommunityPost
 import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class CommunityViewModel(private val communityUseCase: CommunityUseCase): ViewModel() {
     private val fireStore = FirebaseFirestore.getInstance()
-    private val fireStoreManager = FireStorePagingManager(fireStore)
+    private val fireStoreManager = FireStoreManager(fireStore)
     private val pageSize = 10
 
     val getPosts = Pager(PagingConfig(pageSize)) {

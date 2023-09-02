@@ -15,10 +15,14 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.bangunkota.bangunkota.R
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
+import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
+import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.ActivityCreateEventBinding
 import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
+import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
@@ -46,6 +50,32 @@ class CreateEventActivity : AppCompatActivity() {
     private var dataDate = "null"
     private var dataTime = "null"
 
+    /**
+     * USER PREFERENCES
+     */
+    private lateinit var userPreferencesManager: UserPreferencesManager
+
+    /**
+     * USER VIEWMODEL FACTORY
+     */
+    private lateinit var userViewModelFactory: UserViewModelFactory
+
+
+    /**
+     * USER USECASE
+     */
+    private lateinit var userUseCase: UserUseCase
+
+    /**
+     * USER REPOSITORY
+     */
+    private lateinit var userRepository: UserRepository
+
+    /**
+     * FIRESTORE MANAGER
+     */
+    private lateinit var fireStoreManager: FireStoreManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -62,8 +92,11 @@ class CreateEventActivity : AppCompatActivity() {
         val viewModelFactory = EventViewModelFactory(eventUseCase)
         eventViewModel = ViewModelProvider(this, viewModelFactory)[EventViewModel::class.java]
 
-        val userPreferencesManager = UserPreferencesManager(this)
-        val userViewModelFactory = UserViewModelFactory(userPreferencesManager)
+        // USER CONFIG
+        userPreferencesManager = UserPreferencesManager(this)
+        userRepository = UserRepositoryImpl(fireStoreManager)
+        userUseCase = UserUseCase(userRepository)
+        userViewModelFactory = UserViewModelFactory(userPreferencesManager, userUseCase)
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
     }
 

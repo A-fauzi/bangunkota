@@ -7,26 +7,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 class CommunityRepositoryImpl(
-    private val firestore: FirebaseFirestore,
-//    private val communityPostDao: CommunityPostDao
+    private val firestore: FirebaseFirestore
     ): CommunityRepository {
-//    override suspend fun fetchDataFromFireStoreAndSaveToRoom() {
-//        try {
-//            val querySnapshot = firestore.collection("community_posts").get().await()
-//
-//            val postList = mutableListOf<CommunityPost>()
-//            for (document in querySnapshot) {
-//                val userData = document.toObject(CommunityPost::class.java)
-//                postList.add(userData)
-//            }
-//
-//            Log.d("CommunityRepositoryImpl", postList.toString())
-//            communityPostDao.insertPost(postList)
-//        }catch (e: Exception) {
-//            throw e
-//        }
-//    }
-
 
     override suspend fun getPostById(postId: String): CommunityPost? {
         return try {

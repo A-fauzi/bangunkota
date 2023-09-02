@@ -2,6 +2,7 @@ package com.bangunkota.bangunkota.presentation.view.main.fragment
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -13,31 +14,33 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bangunkota.bangunkota.R
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.bangunkota.bangunkota.data.repository.abstractions.CommunityRepository
+import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.CommunityRepositoryImpl
+import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.FragmentCommunityBinding
 import com.bangunkota.bangunkota.databinding.ItemCommunityPostBinding
 import com.bangunkota.bangunkota.domain.entity.CommunityPost
 import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
+import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.CommunityViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.CommunityViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
+import com.bangunkota.bangunkota.utils.MessageHandler
 import com.bangunkota.bangunkota.utils.UniqueIdGenerator
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
 import com.bumptech.glide.Glide
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.ktx.database
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Source
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import okhttp3.internal.notifyAll
 
 class CommunityFragment : Fragment() {
 
@@ -45,19 +48,95 @@ class CommunityFragment : Fragment() {
         const val TAG = "CommunityFragment"
     }
 
+    /**
+     * BINDING VIEW
+     */
     private lateinit var binding: FragmentCommunityBinding
+
+    /**
+     * ADAPTER PAGING
+     */
     private lateinit var adapterPagingList: AdapterPagingList<CommunityPost, ItemCommunityPostBinding>
+
+    /**
+     * COMMUNITY VIEWMODEL
+     */
     private lateinit var communityViewModel: CommunityViewModel
+
+    /**
+     * USER VIEWMODEL
+     */
     private lateinit var userViewModel: UserViewModel
+
+    /**
+     * USER PREFERENCES
+     */
     private lateinit var userPreferencesManager: UserPreferencesManager
+
+    /**
+     * USER VIEWMODEL FACTORY
+     */
     private lateinit var userViewModelFactory: UserViewModelFactory
+
+    /**
+     * COMMUNITY VIEWMODEL FACTORY
+     */
     private lateinit var communityViewModelFactory: CommunityViewModelFactory
-    private lateinit var useCase: CommunityUseCase
-    private lateinit var repository: CommunityRepository
+
+    /**
+     * COMMUNITY USECASE
+     */
+    private lateinit var communityUseCase: CommunityUseCase
+
+    /**
+     * COMMUNITY REPOSITORY
+     */
+    private lateinit var communityRepository: CommunityRepository
+
+    /**
+     * RECYCLERVIEW POSTING
+     */
     private lateinit var recyclerviewPost: RecyclerView
+
+    /**
+     * FIRESTORE DATABASE
+     */
     private lateinit var firestore: FirebaseFirestore
+
+    /**
+     * FIREBASE AUTH
+     */
     private lateinit var auth: FirebaseAuth
+
+    /**
+     * FIREBASE USER
+     */
     private var user: FirebaseUser? = null
+
+    /**
+     * MESSAGE TOAST
+     */
+    private lateinit var message: MessageHandler
+
+    /**
+     * COLLECTION REFERENCE
+     */
+    private lateinit var collectionReference: CollectionReference
+
+    /**
+     * USER USECASE
+     */
+    private lateinit var userUseCase: UserUseCase
+
+    /**
+     * USER REPOSITORY
+     */
+    private lateinit var userRepository: UserRepository
+
+    /**
+     * FIRESTORE MANAGER
+     */
+    private lateinit var fireStoreManager: FireStoreManager
 
 //    private lateinit var communityPostDao: CommunityPostDao
 
@@ -75,13 +154,6 @@ class CommunityFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-
-        // Dapatkan instance Firebase Authentication
-        auth = FirebaseAuth.getInstance()
-
-        // Dapatkan informasi pengguna yang saat ini masuk
-        user = auth.currentUser
 
         // Dapatkan ID pengguna
         val userID = user?.uid
@@ -148,6 +220,9 @@ class CommunityFragment : Fragment() {
 
     }
 
+    /**
+     * SETUP VIEWMODEL
+     */
     private fun setUpViewModels() {
         lifecycleScope.launch {
             communityViewModel.getPosts.collectLatest { pagingData ->
@@ -156,6 +231,9 @@ class CommunityFragment : Fragment() {
         }
     }
 
+    /**
+     * SETUP RECYCLERVIEW
+     */
     private fun setUpRecyclerView() {
         recyclerviewPost = binding.rvCommunityPost
         recyclerviewPost.apply {
@@ -165,20 +243,54 @@ class CommunityFragment : Fragment() {
         }
     }
 
+    /**
+     * INITIALIZING OBJECT
+     */
     private fun initialsObject() {
 
-        // Misalnya, Anda memiliki koleksi 'users' dalam Firestore
-        val userRef = FirebaseFirestore.getInstance().collection("users")
+        // INIT
+        auth = FirebaseAuth.getInstance()
+        firestore = FirebaseFirestore.getInstance()
+        fireStoreManager = FireStoreManager(firestore)
+        message = MessageHandler(requireActivity())
 
+        user = auth.currentUser
+
+        // USER CONFIG
+        userPreferencesManager = UserPreferencesManager(requireActivity())
+        userRepository = UserRepositoryImpl(fireStoreManager)
+        userUseCase = UserUseCase(userRepository)
+        userViewModelFactory = UserViewModelFactory(userPreferencesManager, userUseCase)
+        userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
+
+
+        // COMMUNITY CONFIG
+        communityRepository = CommunityRepositoryImpl(firestore)
+        communityUseCase = CommunityUseCase(communityRepository)
+        communityViewModelFactory = CommunityViewModelFactory(communityUseCase)
+        communityViewModel = ViewModelProvider(
+            requireActivity(),
+            communityViewModelFactory
+        )[CommunityViewModel::class.java]
+
+        // GET COLLECTION USERS
+        collectionReference = firestore.collection("users")
+
+        // COMMUNITY SETUP ADAPTER
         adapterPagingList = AdapterPagingList(requireActivity(), { binding, post ->
 
+            // EDITTEXT POST
             binding.tvTextPost.text = post.text
 
-            // Dapatkan informasi pengguna berdasarkan UID
-            userRef.document(post.uid.toString()).get()
+            // GET INFORMATION USER BY POST UID
+            collectionReference.document(post.uid.toString()).get()
                 .addOnSuccessListener { userSnapshot ->
+
+                    // WHEN SUCCESS GET DATA USERS
+                    // CEK USER IF EXISTS
                     if (userSnapshot.exists()) {
-                        // Tampilkan nama pengguna dalam TextView atau tempat lain yang sesuai
+
+                        // GET VALUE AND SET TO ITEM POSTING COMMUNITY
                         binding.itemNameUser.text = userSnapshot.getString("name")
                         binding.itemEmailUser.text = userSnapshot.getString("email")
                         Glide.with(requireActivity())
@@ -186,75 +298,75 @@ class CommunityFragment : Fragment() {
                             .placeholder(R.drawable.img_placeholder)
                             .error(R.drawable.example_profile)
                             .into(binding.itemIvProfile)
+
+
                     }
                 }
                 .addOnFailureListener { exception ->
-                    // Penanganan kesalahan jika gagal mengambil data pengguna
+
+                    // HANDLE IF FAILURE ON GET DOCUMENT USERS
+                    message.toastMsg("Error ${exception.message}")
+
                 }
 
 
         }, ItemCommunityPostBinding::inflate)
-        userPreferencesManager = UserPreferencesManager(requireActivity())
-        userViewModelFactory = UserViewModelFactory(userPreferencesManager)
-        userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
-        firestore = FirebaseFirestore.getInstance()
-//        communityPostDao = AppDatabase.getInstance(requireActivity()).communityPostDao()
-        repository = CommunityRepositoryImpl(firestore)
-        useCase = CommunityUseCase(repository)
-        communityViewModelFactory = CommunityViewModelFactory(useCase)
-        communityViewModel = ViewModelProvider(
-            requireActivity(),
-            communityViewModelFactory
-        )[CommunityViewModel::class.java]
+
     }
 
+    /**
+     * VIEWS ONCLICK
+     */
     @SuppressLint("SuspiciousIndentation")
     private fun onClickViews() {
+        // WHEN BUTTON END ICON POSTING MESSAGE ONCLICK
+        binding.outlineTextfieldProductSpec.setEndIconOnClickListener { insertDataPost() }
 
-        binding.outlineTextfieldProductSpec.setEndIconOnClickListener {
+        // button top scroll
+        binding.fabUpScroll.setOnClickListener { binding.nestedScrollView.smoothScrollTo(0, 0) }
+    }
 
-            binding.outlineTextfieldProductSpec.isEnabled = false
+    /**
+     * INSERT DATA POSTING
+     */
+    private fun insertDataPost() {
 
-            val textPost = binding.etPostText.text.toString()
-            val data = CommunityPost(
-                id = UniqueIdGenerator.generateUniqueId(),
-                uid = user?.uid,
-                text = textPost,
-                create_at = Timestamp.now()
-            )
+        // TEXTFIELD FALSE
+        binding.outlineTextfieldProductSpec.isEnabled = false
 
-            lifecycleScope.launch {
-                val result = communityViewModel.insertPost(data)
-                result.onSuccess {
-                    if (result.isSuccess) {
-                        adapterPagingList.refresh()
-                        binding.outlineTextfieldProductSpec.isEnabled = true
-                        binding.etPostText.text?.clear()
-                    } else {
-                        binding.outlineTextfieldProductSpec.isEnabled = true
-                        Toast.makeText(
-                            requireActivity(),
-                            "Gagal Posting",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }.onFailure {
+        // GET TEXT IN EDITTEXT POST
+        val textPost = binding.etPostText.text.toString()
+
+        // SET DATA POSTING
+        val data = CommunityPost(
+            id = UniqueIdGenerator.generateUniqueId(),
+            uid = user?.uid,
+            text = textPost,
+            create_at = Timestamp.now()
+        )
+
+        // INSERT DATA POSTING
+        lifecycleScope.launch {
+            val result = communityViewModel.insertPost(data)
+            result.onSuccess {
+                if (result.isSuccess) {
+                    adapterPagingList.refresh()
                     binding.outlineTextfieldProductSpec.isEnabled = true
-                    Toast.makeText(
-                        requireActivity(),
-                        "Error Posting ${it.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    binding.etPostText.text?.clear()
+                } else {
+                    binding.outlineTextfieldProductSpec.isEnabled = true
+                    message.toastMsg("Gagal Posting")
                 }
+            }.onFailure {
+                binding.outlineTextfieldProductSpec.isEnabled = true
+                message.toastMsg("Error Posting ${it.message}")
             }
-
-        }
-
-        binding.fabUpScroll.setOnClickListener {
-            binding.nestedScrollView.smoothScrollTo(0, 0)
         }
     }
 
+    /**
+     * SET VIEW OR CONFIG TOPAPPBAR
+     */
     private fun setTopAppBar() {
         binding.appBarLayout.topAppBar.title = "Community"
         binding.appBarLayout.topAppBar.menu.findItem(R.id.account).isVisible = false

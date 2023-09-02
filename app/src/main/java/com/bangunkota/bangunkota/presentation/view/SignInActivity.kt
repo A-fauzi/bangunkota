@@ -9,9 +9,13 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
+import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.AuthRepositoryImpl
+import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.ActivitySignInBinding
 import com.bangunkota.bangunkota.domain.usecase.SignInUseCase
+import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.SignInViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.SignInViewModelFactory
@@ -23,6 +27,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class SignInActivity : AppCompatActivity() {
 
@@ -37,6 +42,33 @@ class SignInActivity : AppCompatActivity() {
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var gso: GoogleSignInOptions
 
+    /**
+     * USER PREFERENCES
+     */
+    private lateinit var userPreferencesManager: UserPreferencesManager
+
+    /**
+     * USER VIEWMODEL FACTORY
+     */
+    private lateinit var userViewModelFactory: UserViewModelFactory
+
+
+    /**
+     * USER USECASE
+     */
+    private lateinit var userUseCase: UserUseCase
+
+    /**
+     * USER REPOSITORY
+     */
+    private lateinit var userRepository: UserRepository
+
+    /**
+     * FIRESTORE MANAGER
+     */
+    private lateinit var fireStoreManager: FireStoreManager
+
+
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,12 +81,18 @@ class SignInActivity : AppCompatActivity() {
         val authRepository = AuthRepositoryImpl(firebaseAuth)
         val signInUseCase = SignInUseCase(authRepository)
         val signInViewModelFactory = SignInViewModelFactory(signInUseCase)
+        val fireStore = FirebaseFirestore.getInstance()
+        fireStoreManager = FireStoreManager(fireStore)
 
         viewModel = ViewModelProvider(this, signInViewModelFactory)[SignInViewModel::class.java]
 
-        val userPreferencesManager = UserPreferencesManager(this)
-        val userViewModelFactory = UserViewModelFactory(userPreferencesManager)
+        // USER CONFIG
+        userPreferencesManager = UserPreferencesManager(this)
+        userRepository = UserRepositoryImpl(fireStoreManager)
+        userUseCase = UserUseCase(userRepository)
+        userViewModelFactory = UserViewModelFactory(userPreferencesManager, userUseCase)
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
+
 
         binding.signInButton.setOnClickListener {
             signIn()

@@ -2,11 +2,11 @@ package com.bangunkota.bangunkota.data.datasource
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStorePagingManager
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.google.firebase.firestore.QuerySnapshot
 
 class PagingSource<T: Any>(
-    private val fireStoreManager: FireStorePagingManager,
+    private val fireStoreManager: FireStoreManager,
     private val collectionPath: String,
     private val pageSize: Int,
     private val itemClass: Class<T>
