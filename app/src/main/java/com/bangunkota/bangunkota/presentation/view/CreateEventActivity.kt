@@ -263,9 +263,9 @@ class CreateEventActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.N)
     private fun storeDataToFireStore(imageUri: String) {
 
-        userViewModel.userId.observe(this) { userId ->
+        userViewModel.userData.observe(this) {
 
-            val event = setDataEvent(imageUri, userId)
+            val event = setDataEvent(imageUri, it.id)
 
             lifecycleScope.launch {
 

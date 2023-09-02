@@ -25,6 +25,7 @@ import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryIm
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
 import com.bangunkota.bangunkota.databinding.ItemEventBinding
 import com.bangunkota.bangunkota.domain.entity.CommunityEvent
+import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
@@ -44,6 +45,7 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -60,6 +62,8 @@ class HomeFragment : Fragment() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var geocoder: Geocoder
     private lateinit var myLocation: MyLocation
+
+    private lateinit var message: MessageHandler
 
     private lateinit var eventAdapter: AdapterPagingList<CommunityEvent, ItemEventBinding>
 
@@ -105,6 +109,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun initObj() {
+        message = MessageHandler(requireActivity())
         eventAdapter = AdapterPagingList(requireActivity(), { binding, event ->
             binding.itemTitle.text = event.title
                 binding.itemAddress.text = event.address
@@ -219,14 +224,12 @@ class HomeFragment : Fragment() {
     }
 
     private fun topAppBarBehaviour() {
-        userViewModel.userName.observe(viewLifecycleOwner) {
-            binding.appBarLayout.topAppBar.title = "Hi, $it"
-        }
-
-        userViewModel.userPhoto.observe(viewLifecycleOwner) {
+        userViewModel.userData.observe(viewLifecycleOwner) {
+            checkingUserDocument(it.id.toString(), it.name.toString(), it.email.toString(), it.photoUrl.toString())
+            binding.appBarLayout.topAppBar.title = "Hi, ${it.name}"
             Glide.with(requireContext())
                 .asBitmap()
-                .load(it)
+                .load(it.photoUrl)
                 .apply(RequestOptions.circleCropTransform())
                 .into(object : CustomTarget<Bitmap>() {
                     override fun onResourceReady(
@@ -263,6 +266,32 @@ class HomeFragment : Fragment() {
                 else -> false
             }
         }
+    }
+
+    /**
+     * Ceck user and condition if exists or not exists
+     */
+    private fun checkingUserDocument(uid: String, name: String, email: String, photo: String) {
+        val data = User(
+            uid,
+            name,
+            email,
+            photo,
+            Timestamp.now().toDate(),
+            null,
+            null
+        )
+
+        lifecycleScope.launch {
+            userViewModel.createUserDocument(uid, data,
+                onSuccess = {
+                    message.toastMsg("Data Pengguna berhasil disimpan")
+                }, onFailure = {
+                    message.toastMsg("Data Pengguna gagal disimpan")
+                }
+            )
+        }
+
     }
 
     private fun signOutUser() {

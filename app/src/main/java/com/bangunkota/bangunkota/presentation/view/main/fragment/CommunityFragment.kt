@@ -316,7 +316,7 @@ class CommunityFragment : Fragment() {
      */
     private fun insertDataPost() {
 
-        userViewModel.userId.observe(viewLifecycleOwner) {
+        userViewModel.userData.observe(viewLifecycleOwner) {
 
             // TEXTFIELD FALSE
             binding.outlineTextfieldProductSpec.isEnabled = false
@@ -327,7 +327,7 @@ class CommunityFragment : Fragment() {
             // SET DATA POSTING
             val data = CommunityPost(
                 id = UniqueIdGenerator.generateUniqueId(),
-                uid = it,
+                uid = it.id,
                 text = textPost,
                 created_at = Timestamp.now()
             )

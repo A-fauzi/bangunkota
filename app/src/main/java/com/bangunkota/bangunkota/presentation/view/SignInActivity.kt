@@ -176,7 +176,6 @@ class SignInActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                checkingUserDocument(account.id.toString(), account.displayName.toString(), account.email.toString(), account.photoUrl.toString())
                 userViewModel.saveUserData(account.id.toString(), account.displayName.toString(), account.email.toString(), account.photoUrl.toString())
                 viewModel.signIn(account)
 
@@ -187,32 +186,6 @@ class SignInActivity : AppCompatActivity() {
                 Toast.makeText(this, "Login Failed", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    /**
-     * Ceck user and condition if exists or not exists
-     */
-    private fun checkingUserDocument(uid: String, name: String, email: String, photo: String) {
-        val data = User(
-            uid,
-            name,
-            email,
-            photo,
-            Timestamp.now().toDate(),
-            null,
-            null
-        )
-
-        lifecycleScope.launch {
-            userViewModel.createUserDocument(uid, data,
-                onSuccess = {
-                    message.toastMsg("Data Pengguna berhasil disimpan")
-                }, onFailure = {
-                    message.toastMsg("Data Pengguna gagal disimpan")
-                }
-            )
-        }
-
     }
 
 
