@@ -1,5 +1,6 @@
 package com.bangunkota.bangunkota.data.datasource.remote.firebase
 
+import com.bangunkota.bangunkota.domain.entity.User
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -29,5 +30,29 @@ class FireStoreManager(private val firestore: FirebaseFirestore) {
             .document(id)
             .get()
             .await()
+    }
+
+    fun createUserDocument(uid: String, user: User, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        val userRef = firestore.collection("users").document(uid)
+
+        userRef.get().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val document = task.result
+                if (!document.exists()) {
+                    // Dokumen pengguna belum ada, maka Anda bisa memasukkan datanya ke Firestore
+                    userRef.set(user)
+                        .addOnSuccessListener {
+                            onSuccess()
+                        }
+                        .addOnFailureListener { exception ->
+                            onFailure()
+                        }
+                } else {
+                    // Jika pengguna sudah ada di database
+                }
+            } else {
+                onFailure()
+            }
+        }
     }
 }

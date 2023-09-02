@@ -140,8 +140,6 @@ class CommunityFragment : Fragment() {
      */
     private lateinit var fireStoreManager: FireStoreManager
 
-//    private lateinit var communityPostDao: CommunityPostDao
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -157,59 +155,11 @@ class CommunityFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        checkingUserDocument()
         setTopAppBar()
         onClickViews()
         setUpViewModels()
         setUpRecyclerView()
-        //        communityViewModel.fetchDataAndSaveToRoom()
 
-    }
-
-
-    /**
-     * Ceck user and condition if exists or not exists
-     */
-    private fun checkingUserDocument() {
-        val uid = user?.uid.toString()
-
-        // Buat referensi ke dokumen pengguna di Firestore
-        val userRef = firestore.collection("users").document(uid)
-
-        // Lakukan pengecekan apakah dokumen pengguna sudah ada di Firestore
-        userRef.get().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val document = task.result
-                if (!document.exists()) {
-                    // Dokumen pengguna belum ada, maka Anda bisa memasukkan datanya ke Firestore
-                    val userData = User(
-                        user?.uid,
-                        user?.displayName,
-                        user?.email,
-                        user?.photoUrl.toString(),
-                        Timestamp.now().toDate(),
-                        null,
-                        null
-                    )
-
-                    // Masukkan data pengguna ke Firestore
-                    userRef.set(userData)
-                        .addOnSuccessListener {
-                            // Data pengguna berhasil dimasukkan ke Firestore
-                            message.toastMsg("Data Pengguna berhasil di simpan")
-                        }
-                        .addOnFailureListener { exception ->
-                            // Penanganan kesalahan jika gagal memasukkan data
-                            message.toastMsg("Data Pengguna gagal di simpan")
-                        }
-                } else {
-                    // Jika pengguna sudah ada di database
-                }
-            } else {
-                // Pengguna belum masuk, Anda harus menangani kasus ini sesuai dengan kebutuhan Anda
-                message.toastMsg("Kesalahan mengambil dokument pengguna, pengguna belum masuk")
-            }
-        }
     }
 
     /**
@@ -232,8 +182,8 @@ class CommunityFragment : Fragment() {
             layoutManager =
                 LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
             adapter = adapterPagingList.withLoadStateHeaderAndFooter(
-                header = LoadStateAdapter {adapterPagingList.retry()},
-                footer = LoadStateAdapter {adapterPagingList.retry()}
+                header = LoadStateAdapter { adapterPagingList.retry() },
+                footer = LoadStateAdapter { adapterPagingList.retry() }
             )
         }
 
@@ -313,12 +263,20 @@ class CommunityFragment : Fragment() {
 
                             if (isLoved) {
                                 binding.btnLove.setImageResource(R.drawable.heart_outline)
-                                Toast.makeText(requireActivity(), "Batal Menyukai", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    requireActivity(),
+                                    "Batal Menyukai",
+                                    Toast.LENGTH_SHORT
+                                ).show()
 
                                 // Handle deleted data like in document
                             } else {
                                 binding.btnLove.setImageResource(R.drawable.heart_filled)
-                                Toast.makeText(requireActivity(), "Kamu Menyukai ini", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    requireActivity(),
+                                    "Kamu Menyukai ini",
+                                    Toast.LENGTH_SHORT
+                                ).show()
 
 //                                insertDataLikePost(postId)
                             }

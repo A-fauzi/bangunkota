@@ -6,8 +6,8 @@ import com.bangunkota.bangunkota.domain.entity.User
 import com.google.firebase.firestore.DocumentSnapshot
 
 class UserRepositoryImpl(private val fireStoreManager: FireStoreManager): UserRepository {
-    override suspend fun addUser(user: User): Result<Unit> {
-        TODO("Not yet implemented")
+    override suspend fun addUser(uid: String, user: User, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        fireStoreManager.createUserDocument(uid, user, onSuccess, onFailure)
     }
 
     override suspend fun getUserById(collectionPath: String, id: String): DocumentSnapshot {

@@ -11,6 +11,7 @@ data class CommunityPost(
     val id: String = "",
     val text: String? = null,
     val uid: String? = null,
+    val appreciate: List<String>? = null,
     val created_at: Timestamp? = null,
     val updated_at: Timestamp? = null
 )

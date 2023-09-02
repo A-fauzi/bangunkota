@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
 import com.google.firebase.firestore.DocumentSnapshot
@@ -21,6 +22,10 @@ class UserViewModel(private val preferencesManager: UserPreferencesManager, priv
         viewModelScope.launch {
             preferencesManager.saveUserData(userId, username, userEmail, userPhoto)
         }
+    }
+
+    suspend fun createUserDocument(uid: String, user: User, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        userUseCase.execute(uid, user, onSuccess, onFailure)
     }
 
     private val _data = MutableLiveData<DocumentSnapshot?>()
