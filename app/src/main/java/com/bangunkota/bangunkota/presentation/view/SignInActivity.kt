@@ -81,10 +81,11 @@ class SignInActivity : AppCompatActivity() {
         val authRepository = AuthRepositoryImpl(firebaseAuth)
         val signInUseCase = SignInUseCase(authRepository)
         val signInViewModelFactory = SignInViewModelFactory(signInUseCase)
+        viewModel = ViewModelProvider(this, signInViewModelFactory)[SignInViewModel::class.java]
+
         val fireStore = FirebaseFirestore.getInstance()
         fireStoreManager = FireStoreManager(fireStore)
 
-        viewModel = ViewModelProvider(this, signInViewModelFactory)[SignInViewModel::class.java]
 
         // USER CONFIG
         userPreferencesManager = UserPreferencesManager(this)
@@ -122,17 +123,6 @@ class SignInActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onStart() {
         super.onStart()
-
-        viewModel.isUserSignedIn.observe(this) { isLogged ->
-            if (isLogged) {
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-                finish()
-            } else {
-                Toast.makeText(this, "Sign in dulu!", Toast.LENGTH_SHORT).show()
-            }
-        }
-        viewModel.checkCurrentUser()
     }
 
     private fun createRequest() {

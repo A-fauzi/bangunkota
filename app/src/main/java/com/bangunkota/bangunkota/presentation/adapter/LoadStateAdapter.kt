@@ -11,12 +11,16 @@ import com.bangunkota.bangunkota.databinding.ItemLoadStateBinding
 class LoadStateAdapter(private val retry: () -> Unit): androidx.paging.LoadStateAdapter<LoadStateAdapter.ViewHolder>() {
     inner class ViewHolder(private val binding: ItemLoadStateBinding, private val retry: () -> Unit): RecyclerView.ViewHolder(binding.root) {
         fun bind(loadState: LoadState) {
+
+
             if (loadState is LoadState.Error) {
                 binding.progressIndicator.visibility = View.GONE
                 binding.tvError.visibility = View.VISIBLE
                 binding.tvError.text = loadState.error.localizedMessage
             } else {
                 binding.progressIndicator.visibility = View.VISIBLE
+                binding.btnRetry.visibility = View.GONE
+                binding.tvError.visibility = View.GONE
             }
 
             binding.progressIndicator.isVisible = (loadState is LoadState.Loading)
@@ -25,7 +29,7 @@ class LoadStateAdapter(private val retry: () -> Unit): androidx.paging.LoadState
 
             binding.btnRetry.setOnClickListener {
                 binding.tvError.visibility = View.GONE
-                retry
+                retry()
             }
         }
     }

@@ -114,7 +114,11 @@ dependencies {
     implementation "com.airbnb.android:lottie:$lottieVersion"
 
 
+    // Shimmer Effect
+    implementation 'com.facebook.shimmer:shimmer:0.5.0'
 
+    // OnBoarding
+    implementation 'com.cuneytayyildiz:onboarder:2.0.0'
 
 
 }

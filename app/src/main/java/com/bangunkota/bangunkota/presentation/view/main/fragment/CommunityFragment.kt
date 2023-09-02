@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bangunkota.bangunkota.R
@@ -25,6 +26,7 @@ import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
+import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.CommunityViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.CommunityViewModelFactory
@@ -228,7 +230,22 @@ class CommunityFragment : Fragment() {
         recyclerviewPost.apply {
             layoutManager =
                 LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
-            adapter = adapterPagingList
+            adapter = adapterPagingList.withLoadStateHeaderAndFooter(
+                header = LoadStateAdapter {adapterPagingList.retry()},
+                footer = LoadStateAdapter {adapterPagingList.retry()}
+            )
+        }
+
+        adapterPagingList.addLoadStateListener { combinedLoadStates ->
+            val isLoading = combinedLoadStates.refresh is LoadState.Loading
+
+            if (isLoading) {
+                binding.rvCommunityPost.visibility = View.GONE
+                binding.shimmerPost.visibility = View.VISIBLE
+            } else {
+                binding.rvCommunityPost.visibility = View.VISIBLE
+                binding.shimmerPost.visibility = View.GONE
+            }
         }
     }
 
@@ -285,7 +302,7 @@ class CommunityFragment : Fragment() {
                         Glide.with(requireActivity())
                             .load(userSnapshot.getString("photoUrl"))
                             .placeholder(R.drawable.img_placeholder)
-                            .error(R.drawable.example_profile)
+                            .error(R.drawable.img_placeholder)
                             .into(binding.itemIvProfile)
 
 
