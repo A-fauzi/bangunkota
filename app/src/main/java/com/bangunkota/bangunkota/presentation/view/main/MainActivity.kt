@@ -1,19 +1,12 @@
 package com.bangunkota.bangunkota.presentation.view.main
 
 import android.Manifest
-import android.content.Context
-import android.location.Geocoder
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -30,14 +23,10 @@ import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.utils.MessageHandler
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -47,80 +36,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
 
-    /**
-     * FIREBASE AUTH
-     */
-    private lateinit var auth: FirebaseAuth
-
-    /**
-     * FIREBASE USER
-     */
-    private var user: FirebaseUser? = null
-    /**
-     * MESSAGE TOAST
-     */
-    private lateinit var message: MessageHandler
-
-    private lateinit var fireStoreManager: FireStoreManager
-    private lateinit var userRepository: UserRepository
-    private lateinit var userUseCase: UserUseCase
-    private lateinit var userViewModelFactory: UserViewModelFactory
-    private lateinit var userViewModel: UserViewModel
-    private lateinit var userPreferencesManager: UserPreferencesManager
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        initObject()
         setUpNavigation()
         permissionsRequest()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        checkingUserDocument()
-    }
-
-    private fun initObject() {
-        auth = FirebaseAuth.getInstance()
-        user = auth.currentUser
-        message = MessageHandler(this)
-
-        // USER CONFIG
-        userPreferencesManager = UserPreferencesManager(this)
-        fireStoreManager = FireStoreManager(FirebaseFirestore.getInstance())
-        userRepository = UserRepositoryImpl(fireStoreManager)
-        userUseCase = UserUseCase(userRepository)
-        userViewModelFactory = UserViewModelFactory(userPreferencesManager, userUseCase)
-        userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
-    }
-
-    /**
-     * Ceck user and condition if exists or not exists
-     */
-    private fun checkingUserDocument() {
-        val data = User(
-            user?.uid,
-            user?.displayName,
-            user?.email,
-            user?.photoUrl.toString(),
-            Timestamp.now().toDate(),
-            null,
-            null
-        )
-
-        lifecycleScope.launch {
-            userViewModel.createUserDocument(user?.uid.toString(), data,
-                onSuccess = {
-                    message.toastMsg("Data Pengguna berhasil disimpan")
-                }, onFailure = {
-                    message.toastMsg("Data Pengguna gagal disimpan")
-                }
-            )
-        }
     }
 
     private fun setUpNavigation() {

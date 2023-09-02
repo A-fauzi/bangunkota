@@ -316,37 +316,43 @@ class CommunityFragment : Fragment() {
      */
     private fun insertDataPost() {
 
-        // TEXTFIELD FALSE
-        binding.outlineTextfieldProductSpec.isEnabled = false
+        userViewModel.userId.observe(viewLifecycleOwner) {
 
-        // GET TEXT IN EDITTEXT POST
-        val textPost = binding.etPostText.text.toString()
+            // TEXTFIELD FALSE
+            binding.outlineTextfieldProductSpec.isEnabled = false
 
-        // SET DATA POSTING
-        val data = CommunityPost(
-            id = UniqueIdGenerator.generateUniqueId(),
-            uid = user?.uid,
-            text = textPost,
-            created_at = Timestamp.now()
-        )
+            // GET TEXT IN EDITTEXT POST
+            val textPost = binding.etPostText.text.toString()
 
-        // INSERT DATA POSTING
-        lifecycleScope.launch {
-            val result = communityViewModel.insertPost(data)
-            result.onSuccess {
-                if (result.isSuccess) {
-                    adapterPagingList.refresh()
+            // SET DATA POSTING
+            val data = CommunityPost(
+                id = UniqueIdGenerator.generateUniqueId(),
+                uid = it,
+                text = textPost,
+                created_at = Timestamp.now()
+            )
+
+            // INSERT DATA POSTING
+            lifecycleScope.launch {
+                val result = communityViewModel.insertPost(data)
+                result.onSuccess {
+                    if (result.isSuccess) {
+                        adapterPagingList.refresh()
+                        binding.outlineTextfieldProductSpec.isEnabled = true
+                        binding.etPostText.text?.clear()
+                    } else {
+                        binding.outlineTextfieldProductSpec.isEnabled = true
+                        message.toastMsg("Gagal Posting")
+                    }
+                }.onFailure {
                     binding.outlineTextfieldProductSpec.isEnabled = true
-                    binding.etPostText.text?.clear()
-                } else {
-                    binding.outlineTextfieldProductSpec.isEnabled = true
-                    message.toastMsg("Gagal Posting")
+                    message.toastMsg("Error Posting ${it.message}")
                 }
-            }.onFailure {
-                binding.outlineTextfieldProductSpec.isEnabled = true
-                message.toastMsg("Error Posting ${it.message}")
             }
+
         }
+
+
     }
 
     private fun insertDataLikePost(postId: String) {

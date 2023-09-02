@@ -9,11 +9,13 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.AuthRepositoryImpl
 import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.ActivitySignInBinding
+import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.usecase.SignInUseCase
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.SignInViewModel
@@ -21,13 +23,17 @@ import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.SignInViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.presentation.view.main.MainActivity
+import com.bangunkota.bangunkota.utils.MessageHandler
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 class SignInActivity : AppCompatActivity() {
 
@@ -69,6 +75,22 @@ class SignInActivity : AppCompatActivity() {
     private lateinit var fireStoreManager: FireStoreManager
 
 
+    /**
+     * FIREBASE AUTH
+     */
+    private lateinit var auth: FirebaseAuth
+
+    /**
+     * FIREBASE USER
+     */
+    private var user: FirebaseUser? = null
+    /**
+     * MESSAGE TOAST
+     */
+    private lateinit var message: MessageHandler
+
+
+
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,6 +108,9 @@ class SignInActivity : AppCompatActivity() {
         val fireStore = FirebaseFirestore.getInstance()
         fireStoreManager = FireStoreManager(fireStore)
 
+        auth = FirebaseAuth.getInstance()
+        user = auth.currentUser
+        message = MessageHandler(this)
 
         // USER CONFIG
         userPreferencesManager = UserPreferencesManager(this)
@@ -151,6 +176,7 @@ class SignInActivity : AppCompatActivity() {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
                 val account = task.getResult(ApiException::class.java)
+                checkingUserDocument(account.id.toString(), account.displayName.toString(), account.email.toString(), account.photoUrl.toString())
                 userViewModel.saveUserData(account.id.toString(), account.displayName.toString(), account.email.toString(), account.photoUrl.toString())
                 viewModel.signIn(account)
 
@@ -162,4 +188,33 @@ class SignInActivity : AppCompatActivity() {
             }
         }
     }
+
+    /**
+     * Ceck user and condition if exists or not exists
+     */
+    private fun checkingUserDocument(uid: String, name: String, email: String, photo: String) {
+        val data = User(
+            uid,
+            name,
+            email,
+            photo,
+            Timestamp.now().toDate(),
+            null,
+            null
+        )
+
+        lifecycleScope.launch {
+            userViewModel.createUserDocument(uid, data,
+                onSuccess = {
+                    message.toastMsg("Data Pengguna berhasil disimpan")
+                }, onFailure = {
+                    message.toastMsg("Data Pengguna gagal disimpan")
+                }
+            )
+        }
+
+    }
+
+
+
 }
