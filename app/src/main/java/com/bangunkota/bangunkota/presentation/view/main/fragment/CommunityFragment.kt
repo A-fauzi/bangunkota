@@ -369,7 +369,7 @@ class CommunityFragment : Fragment() {
             id = UniqueIdGenerator.generateUniqueId(),
             uid = user?.uid,
             text = textPost,
-            create_at = Timestamp.now()
+            created_at = Timestamp.now()
         )
 
         // INSERT DATA POSTING

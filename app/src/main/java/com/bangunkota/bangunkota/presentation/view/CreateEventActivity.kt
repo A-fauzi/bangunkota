@@ -34,6 +34,7 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.TextInputLayout.END_ICON_CUSTOM
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
@@ -91,6 +92,8 @@ class CreateEventActivity : AppCompatActivity() {
         val eventUseCase = EventUseCase(eventRepository)
         val viewModelFactory = EventViewModelFactory(eventUseCase)
         eventViewModel = ViewModelProvider(this, viewModelFactory)[EventViewModel::class.java]
+
+        fireStoreManager = FireStoreManager(FirebaseFirestore.getInstance())
 
         // USER CONFIG
         userPreferencesManager = UserPreferencesManager(this)

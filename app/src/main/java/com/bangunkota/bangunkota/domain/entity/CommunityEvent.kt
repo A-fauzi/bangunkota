@@ -15,7 +15,7 @@ data class CommunityEvent(
 
 
     @ServerTimestamp
-    val create_at: Date? = null,
+    val created_at: Date? = null,
     @ServerTimestamp
-    val update_at: Date? = null,
+    val updated_at: Date? = null,
 )

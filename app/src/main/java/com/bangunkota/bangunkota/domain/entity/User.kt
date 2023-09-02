@@ -13,4 +13,9 @@ data class User(
     val dateJoin: Date? = null,
     val myEvents: List<CommunityEvent>? = null,
     val createEvents: List<CommunityEvent>? = null,
+
+    @ServerTimestamp
+    val created_at: Date? = null,
+    @ServerTimestamp
+    val updated_at: Date? = null,
 )

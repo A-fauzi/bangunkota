@@ -10,7 +10,7 @@ class FireStoreManager(private val firestore: FirebaseFirestore) {
     suspend fun getInitialPage(collectionPath: String, pageSize: Int): QuerySnapshot {
         return firestore.collection(collectionPath)
             .limit(pageSize.toLong())
-            .orderBy("create_at", Query.Direction.DESCENDING)
+            .orderBy("created_at", Query.Direction.DESCENDING)
             .get()
             .await()
     }
@@ -18,7 +18,7 @@ class FireStoreManager(private val firestore: FirebaseFirestore) {
     suspend fun getNextPage(collectionPath: String, pageSize: Int, lastDocumentSnapshot: DocumentSnapshot): QuerySnapshot {
         return firestore.collection(collectionPath)
             .limit(pageSize.toLong())
-            .orderBy("create_at", Query.Direction.DESCENDING)
+            .orderBy("created_at", Query.Direction.DESCENDING)
             .startAfter(lastDocumentSnapshot)
             .get()
             .await()
