@@ -19,21 +19,27 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManagerV2
+import com.bangunkota.bangunkota.data.repository.abstractions.ExampleRepositoryFireStore
 import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
+import com.bangunkota.bangunkota.data.repository.implementatios.ExampleRepositoryFireStoreImpl
 import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
 import com.bangunkota.bangunkota.databinding.ItemEventBinding
 import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.usecase.EventUseCase
+import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
 import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
+import com.bangunkota.bangunkota.presentation.presenter.viewmodel.ExampleViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.MyLocationViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
+import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.ExampleViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.MyLocationViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.presentation.view.CreateEventActivity
@@ -105,7 +111,50 @@ class HomeFragment : Fragment() {
         setUpRecyclerView()
         getLastLocation()
 
+
+        // EXAMPLEEEEEEE DONE FINISH
+//        exampleFireStoreCrudCleanArchitecture()
+
+
+
         return binding.root
+    }
+
+    private fun exampleFireStoreCrudCleanArchitecture() {
+        val fireStoreManagerV2 = FireStoreManagerV2<User>("users_example")
+        val exampleRepository = ExampleRepositoryFireStoreImpl(fireStoreManagerV2)
+        val exampleUseCase = ExampleUseCase(exampleRepository)
+        val exampleViewModelFactory = ExampleViewModelFactory(exampleUseCase)
+        val exampleViewModel = ViewModelProvider(
+            requireActivity(),
+            exampleViewModelFactory
+        )[ExampleViewModel::class.java]
+
+        val exampleData = User(name = "Example Name", id = "1234567890")
+        exampleViewModel.createDataToFireStore(exampleData, exampleData.id.toString())
+
+        exampleViewModel.getDataFromFireStore("1234567890")
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    if (task.result.exists()) {
+                        message.toastMsg("Data User Example ${task.result.getString("id")} ada")
+
+                        val exampleDataUpdate = User(name = "Example Name Update")
+                        exampleViewModel.updateDataInFireStore(
+                            exampleDataUpdate,
+                            task.result.getString("id").toString()
+                        )
+
+                        exampleViewModel.deleteDataFromFireStore("1234567890")
+                    } else {
+                        message.toastMsg("Data User Example tidak ada")
+                    }
+                } else {
+                    message.toastMsg("gagal mengambil data")
+                }
+            }.addOnFailureListener {
+                message.toastMsg(it.message.toString())
+            }
     }
 
     private fun initObj() {

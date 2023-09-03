@@ -6,11 +6,6 @@ import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
 
 class CommunityUseCase(private val repository: CommunityRepository) {
 
-//    suspend fun fetchDataAndSaveToRoom() {
-//        return repository.fetchDataFromFireStoreAndSaveToRoom()
-//    }
-
-
     suspend fun insertData(data: CommunityPost): Result<Unit> {
         return repository.addPost(data)
     }
