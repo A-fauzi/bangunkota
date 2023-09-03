@@ -10,9 +10,11 @@ import com.bangunkota.bangunkota.data.datasource.PagingSource
 import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
 import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
 import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
+import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
+import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
 
-class CommunityViewModel(private val communityUseCase: CommunityUseCase): ViewModel() {
+class CommunityViewModel(private val communityUseCase: ExampleUseCase<CommunityPost>): ViewModel() {
     private val fireStore = FirebaseFirestore.getInstance()
     private val fireStoreManager = FireStoreManager(fireStore)
     private val pageSize = 10
@@ -22,19 +24,19 @@ class CommunityViewModel(private val communityUseCase: CommunityUseCase): ViewMo
     }.flow.cachedIn(viewModelScope)
 
 
-    suspend fun insertPost(data: CommunityPost): Result<Unit> {
-        return communityUseCase.insertData(data)
+    fun insertPost(data: CommunityPost, documentId: String): Task<Void> {
+        return communityUseCase.createData(data, documentId)
     }
 
-    suspend fun insertLikePost(data: UserLikePost): Result<Unit> {
-        return communityUseCase.insertLikePost(data)
+//    suspend fun insertLikePost(data: UserLikePost): Task<Void> {
+//        return communityUseCase.insertLikePost(data)
+//    }
+
+    fun updatePost(data: CommunityPost, documentId: String): Task<Void> {
+        return communityUseCase.updateData(data, documentId)
     }
 
-    suspend fun updatePost(data: CommunityPost) {
-        communityUseCase.updateData(data)
-    }
-
-    suspend fun deletePost(postId: String) {
-        communityUseCase.deleteData(postId)
+    fun deletePost(postId: String): Task<Void> {
+        return communityUseCase.deleteData(postId)
     }
 }

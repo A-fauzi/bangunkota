@@ -6,6 +6,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModelProvider
@@ -15,26 +17,34 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManagerV2
 import com.bangunkota.bangunkota.data.repository.abstractions.CommunityRepository
 import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.CommunityRepositoryImpl
+import com.bangunkota.bangunkota.data.repository.implementatios.ExampleRepositoryFireStoreImpl
 import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
+import com.bangunkota.bangunkota.databinding.BottomSheetMorePostBinding
 import com.bangunkota.bangunkota.databinding.FragmentCommunityBinding
 import com.bangunkota.bangunkota.databinding.ItemCommunityPostBinding
+import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
 import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
 import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
+import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
 import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.CommunityViewModel
+import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.CommunityViewModelFactory
+import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.utils.MessageHandler
 import com.bangunkota.bangunkota.utils.UniqueIdGenerator
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
 import com.bumptech.glide.Glide
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -234,13 +244,11 @@ class CommunityFragment : Fragment() {
 
 
         // COMMUNITY CONFIG
-        communityRepository = CommunityRepositoryImpl(firestore)
-        communityUseCase = CommunityUseCase(communityRepository)
-        communityViewModelFactory = CommunityViewModelFactory(communityUseCase)
-        communityViewModel = ViewModelProvider(
-            requireActivity(),
-            communityViewModelFactory
-        )[CommunityViewModel::class.java]
+        val firestoreManager = FireStoreManagerV2<CommunityPost>("community_posts")
+        val postRepository = ExampleRepositoryFireStoreImpl(firestoreManager)
+        val postUseCase = ExampleUseCase(postRepository)
+        val postViewModelFactory = CommunityViewModelFactory(postUseCase)
+        communityViewModel = ViewModelProvider(requireActivity(), postViewModelFactory)[CommunityViewModel::class.java]
 
         // GET COLLECTION USERS
         collectionReference = firestore.collection("users")
@@ -269,6 +277,18 @@ class CommunityFragment : Fragment() {
                             // GET VALUE AND SET TO ITEM POSTING COMMUNITY
                             binding.btnMorePost.setOnClickListener {
                                 // Handle button more post
+                                // BottomSheet
+                                val dialog = BottomSheetDialog(requireActivity())
+                                val sheetBinding = BottomSheetMorePostBinding.inflate(layoutInflater)
+                                val view = sheetBinding.root
+                                dialog.setContentView(view)
+
+                                val progressBar = sheetBinding.progressbar
+                                val layoutItem = sheetBinding.layoutItem
+                                sheetBinding.btnDelete.setOnClickListener {
+                                    deleteEventPost(progressBar, layoutItem, dialog, post)
+                                }
+                                dialog.show()
                             }
 
 
@@ -317,6 +337,34 @@ class CommunityFragment : Fragment() {
 
     }
 
+    private fun deleteEventPost(
+        progressBar: ProgressBar,
+        layoutItem: LinearLayout,
+        dialog: BottomSheetDialog,
+        post: CommunityPost
+    ) {
+        progressBar.visibility = View.VISIBLE
+        layoutItem.visibility = View.GONE
+
+        dialog.setCancelable(false)
+
+        communityViewModel.deletePost(post.id)
+            .addOnCompleteListener { delete ->
+                if (delete.isSuccessful) {
+                    adapterPagingList.refresh()
+                    dialog.dismiss()
+                } else {
+                    message.toastMsg("tidak dapat menghapus")
+                    dialog.dismiss()
+                }
+            }
+            .addOnFailureListener { excep ->
+                message.toastMsg("Error menghapus ${excep.message}")
+                dialog.dismiss()
+            }
+    }
+
+
     /**
      * VIEWS ONCLICK
      */
@@ -352,9 +400,9 @@ class CommunityFragment : Fragment() {
 
             // INSERT DATA POSTING
             lifecycleScope.launch {
-                val result = communityViewModel.insertPost(data)
-                result.onSuccess {
-                    if (result.isSuccess) {
+                val result = communityViewModel.insertPost(data, data.id)
+                result.addOnCompleteListener {
+                    if (result.isSuccessful) {
                         adapterPagingList.refresh()
                         binding.outlineTextfieldProductSpec.isEnabled = true
                         binding.etPostText.text?.clear()
@@ -362,7 +410,7 @@ class CommunityFragment : Fragment() {
                         binding.outlineTextfieldProductSpec.isEnabled = true
                         message.toastMsg("Gagal Posting")
                     }
-                }.onFailure {
+                }.addOnFailureListener {
                     binding.outlineTextfieldProductSpec.isEnabled = true
                     message.toastMsg("Error Posting ${it.message}")
                 }
@@ -373,26 +421,26 @@ class CommunityFragment : Fragment() {
 
     }
 
-    private fun insertDataLikePost(postId: String) {
-        val data = UserLikePost(
-            id = UniqueIdGenerator.generateUniqueId(),
-            postId = postId,
-            userId = user?.uid.toString(),
-            createdAt = Timestamp.now()
-        )
-        lifecycleScope.launch {
-            val result = communityViewModel.insertLikePost(data)
-            result.onSuccess {
-                if (result.isSuccess) {
-                    message.toastMsg("Post success your like")
-                } else {
-                    message.toastMsg("Gagal Menyukai")
-                }
-            }.onFailure {
-                message.toastMsg("Error Posting ${it.message}")
-            }
-        }
-    }
+//    private fun insertDataLikePost(postId: String) {
+//        val data = UserLikePost(
+//            id = UniqueIdGenerator.generateUniqueId(),
+//            postId = postId,
+//            userId = user?.uid.toString(),
+//            createdAt = Timestamp.now()
+//        )
+//        lifecycleScope.launch {
+//            val result = communityViewModel.insertLikePost(data)
+//            result.onSuccess {
+//                if (result.isSuccess) {
+//                    message.toastMsg("Post success your like")
+//                } else {
+//                    message.toastMsg("Gagal Menyukai")
+//                }
+//            }.onFailure {
+//                message.toastMsg("Error Posting ${it.message}")
+//            }
+//        }
+//    }
 
     /**
      * SET VIEW OR CONFIG TOPAPPBAR
