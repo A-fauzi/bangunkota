@@ -28,6 +28,7 @@ import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.presentation.view.main.MainActivity
+import com.bangunkota.bangunkota.utils.MessageHandler
 import com.bangunkota.bangunkota.utils.UniqueIdGenerator
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
 import com.google.android.material.datepicker.MaterialDatePicker
@@ -77,6 +78,8 @@ class CreateEventActivity : AppCompatActivity() {
      */
     private lateinit var fireStoreManager: FireStoreManager
 
+    private lateinit var message: MessageHandler
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -88,6 +91,8 @@ class CreateEventActivity : AppCompatActivity() {
     }
 
     private fun initObject() {
+        message = MessageHandler(this)
+
         val eventRepository = EventRepositoryImpl()
         val eventUseCase = EventUseCase(eventRepository)
         val viewModelFactory = EventViewModelFactory(eventUseCase)
@@ -119,10 +124,14 @@ class CreateEventActivity : AppCompatActivity() {
         }
         binding.btnCreateEvent.setOnClickListener {
 
-            binding.btnCreateEvent.visibility = View.GONE
-            binding.progressbar.visibility = View.VISIBLE
-
-            uploadImageToFireStorage()
+            if (fillPath == null) {
+                message.toastMsg("Pilih Gambar dulu bos")
+            } else {
+                binding.btnCreateEvent.visibility = View.GONE
+                binding.progressbar.visibility = View.VISIBLE
+                enabledStateForm(false)
+                uploadImageToFireStorage()
+            }
         }
         binding.eventLocation.outlinedTextFieldEvent.setEndIconOnClickListener {
 //            val placeAutoComplete = Place
@@ -139,6 +148,7 @@ class CreateEventActivity : AppCompatActivity() {
                 val formattedDate =
                     SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectDate)
                 binding.eventDate.outlinedTextFieldEvent.editText?.setText(formattedDate)
+                binding.eventDate.editTextCreateEvent.setTextColor(resources.getColor(R.color.black))
 
                 dataDate = formattedDate
             }
@@ -158,6 +168,7 @@ class CreateEventActivity : AppCompatActivity() {
                 val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
 
                 binding.eventTime.outlinedTextFieldEvent.editText?.setText(formattedTime)
+                binding.eventTime.editTextCreateEvent.setTextColor(resources.getColor(R.color.black))
 
                 dataTime = formattedTime
             }
@@ -165,6 +176,12 @@ class CreateEventActivity : AppCompatActivity() {
         binding.appBarLayout.topAppBar.setNavigationOnClickListener {
             Toast.makeText(this, "Menu Clicked", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun enabledStateForm(state: Boolean) {
+        binding.eventName.outlinedTextFieldEvent.isEnabled = state
+        binding.eventLocation.outlinedTextFieldEvent.isEnabled = state
+        binding.outlinedTextFieldEventDesc.isEnabled = state
     }
 
     private fun getImageFromGalerry() {
@@ -201,8 +218,9 @@ class CreateEventActivity : AppCompatActivity() {
         val reduceImage: ByteArray = bytes(fillPath.toString())
 
         refStorage.putBytes(reduceImage).addOnSuccessListener { uploadTask ->
+
             uploadTask.storage.downloadUrl.addOnSuccessListener { imageUri ->
-                // Get Uri Image to upload firestore
+
                 storeDataToFireStore(imageUri.toString())
 
             }.addOnFailureListener { imgUriExc ->
@@ -210,9 +228,13 @@ class CreateEventActivity : AppCompatActivity() {
                 binding.btnCreateEvent.visibility = View.VISIBLE
                 binding.progressbar.visibility = View.GONE
 
+                enabledStateForm(true)
+
                 Toast.makeText(this, imgUriExc.localizedMessage, Toast.LENGTH_SHORT).show()
             }
         }.addOnFailureListener { uploadTaskExc ->
+
+            enabledStateForm(true)
 
             binding.btnCreateEvent.visibility = View.VISIBLE
             binding.progressbar.visibility = View.GONE
@@ -279,12 +301,6 @@ class CreateEventActivity : AppCompatActivity() {
                         startActivity(intent)
                         finish()
 
-                        Toast.makeText(
-                            this@CreateEventActivity,
-                            "Success Store Data ${event.id}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
                     } else {
 
                         binding.btnCreateEvent.visibility = View.VISIBLE
@@ -293,25 +309,21 @@ class CreateEventActivity : AppCompatActivity() {
                         // Hapus foto sebelum nya yang berhasil di uploas ke firebase storage
                         // this code
 
-                        Toast.makeText(
-                            this@CreateEventActivity,
-                            "Gagal Store Data ${event.id}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        enabledStateForm(true)
+
+                       message.toastMsg("Gagal Store Data ${event.id}")
                     }
-                }.onFailure {
+                }.onFailure { th ->
 
                     binding.btnCreateEvent.visibility = View.VISIBLE
                     binding.progressbar.visibility = View.GONE
 
+                    enabledStateForm(true)
+
                     // Hapus foto sebelum nya yang berhasil di uploas ke firebase storage
                     // this code
 
-                    Toast.makeText(
-                        this@CreateEventActivity,
-                        "Failure Store Data kesalahan ${it.localizedMessage}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                  message.toastMsg("Failure Store Data kesalahan ${th.localizedMessage}")
                 }
             }
 

@@ -46,7 +46,7 @@
                     android:textColor="@color/black"/>
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/outlinedTextFieldEvent"
+                    android:id="@+id/outlinedTextFieldEventDesc"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:theme="@style/ThemeOverlay.AppTheme.TextInputEditText.Outlined"
