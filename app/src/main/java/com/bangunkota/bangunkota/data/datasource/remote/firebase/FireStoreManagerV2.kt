@@ -8,8 +8,8 @@ import com.google.firebase.firestore.SetOptions
 class FireStoreManagerV2<T: Any>(private val collection: String) {
     private val db = FirebaseFirestore.getInstance()
 
-    fun create(data: T, documentId: String) {
-        db.collection(collection)
+    fun create(data: T, documentId: String): Task<Void>{
+        return db.collection(collection)
             .document(documentId)
             .set(data)
     }
@@ -20,14 +20,14 @@ class FireStoreManagerV2<T: Any>(private val collection: String) {
             .get()
     }
 
-    fun update(data: T, documentId: String) {
-        db.collection(collection)
+    fun update(data: T, documentId: String): Task<Void> {
+        return db.collection(collection)
             .document(documentId)
             .set(data, SetOptions.merge())
     }
 
-    fun delete(documentId: String) {
-        db.collection(collection)
+    fun delete(documentId: String): Task<Void> {
+        return db.collection(collection)
             .document(documentId)
             .delete()
     }

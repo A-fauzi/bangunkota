@@ -11,6 +11,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
@@ -20,26 +22,22 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManagerV2
-import com.bangunkota.bangunkota.data.repository.abstractions.ExampleRepositoryFireStore
 import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
-import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
 import com.bangunkota.bangunkota.data.repository.implementatios.ExampleRepositoryFireStoreImpl
 import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
+import com.bangunkota.bangunkota.databinding.BottomSheetMorePostBinding
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
 import com.bangunkota.bangunkota.databinding.ItemEventBinding
 import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 import com.bangunkota.bangunkota.domain.entity.User
-import com.bangunkota.bangunkota.domain.usecase.EventUseCase
 import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
 import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
-import com.bangunkota.bangunkota.presentation.presenter.viewmodel.ExampleViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.MyLocationViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
-import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.ExampleViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.MyLocationViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.presentation.view.CreateEventActivity
@@ -51,6 +49,7 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -58,7 +57,7 @@ import kotlinx.coroutines.launch
 import okio.IOException
 import java.util.*
 
-
+@RequiresApi(Build.VERSION_CODES.N)
 class HomeFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeBinding
@@ -111,64 +110,38 @@ class HomeFragment : Fragment() {
         setUpRecyclerView()
         getLastLocation()
 
-
-        // EXAMPLEEEEEEE DONE FINISH
-//        exampleFireStoreCrudCleanArchitecture()
-
-
-
         return binding.root
-    }
-
-    private fun exampleFireStoreCrudCleanArchitecture() {
-        val fireStoreManagerV2 = FireStoreManagerV2<User>("users_example")
-        val exampleRepository = ExampleRepositoryFireStoreImpl(fireStoreManagerV2)
-        val exampleUseCase = ExampleUseCase(exampleRepository)
-        val exampleViewModelFactory = ExampleViewModelFactory(exampleUseCase)
-        val exampleViewModel = ViewModelProvider(
-            requireActivity(),
-            exampleViewModelFactory
-        )[ExampleViewModel::class.java]
-
-        val exampleData = User(name = "Example Name", id = "1234567890")
-        exampleViewModel.createDataToFireStore(exampleData, exampleData.id.toString())
-
-        exampleViewModel.getDataFromFireStore("1234567890")
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    if (task.result.exists()) {
-                        message.toastMsg("Data User Example ${task.result.getString("id")} ada")
-
-                        val exampleDataUpdate = User(name = "Example Name Update")
-                        exampleViewModel.updateDataInFireStore(
-                            exampleDataUpdate,
-                            task.result.getString("id").toString()
-                        )
-
-                        exampleViewModel.deleteDataFromFireStore("1234567890")
-                    } else {
-                        message.toastMsg("Data User Example tidak ada")
-                    }
-                } else {
-                    message.toastMsg("gagal mengambil data")
-                }
-            }.addOnFailureListener {
-                message.toastMsg(it.message.toString())
-            }
     }
 
     private fun initObj() {
         message = MessageHandler(requireActivity())
-        eventAdapter = AdapterPagingList(requireActivity(), { binding, event ->
+        eventAdapter = AdapterPagingList({ binding, event ->
             binding.itemTitle.text = event.title
-                binding.itemAddress.text = event.address
-                binding.itemDate.text = event.date
-                binding.itemTime.text = "${event.time} WIB"
-                Glide.with(this@HomeFragment)
-                    .load(event.image)
-                    .error(R.drawable.img_placeholder)
-                    .into(binding.itemImage)
-        }, ItemEventBinding::inflate )
+            binding.itemAddress.text = event.address
+            binding.itemDate.text = event.date
+            binding.itemTime.text = "${event.time} WIB"
+            Glide.with(this@HomeFragment)
+                .load(event.image)
+                .error(R.drawable.img_placeholder)
+                .into(binding.itemImage)
+            binding.btnMorePost.setOnClickListener {
+                // BottomSheet
+                val dialog = BottomSheetDialog(requireActivity())
+                val sheetBinding = BottomSheetMorePostBinding.inflate(layoutInflater)
+                val view = sheetBinding.root
+                dialog.setContentView(view)
+
+                val progressBar = sheetBinding.progressbar
+                val layoutItem = sheetBinding.layoutItem
+                sheetBinding.btnDelete.setOnClickListener {
+                    deleteEventPost(progressBar, layoutItem, dialog, event)
+                }
+                dialog.show()
+
+
+            }
+
+        }, ItemEventBinding::inflate)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         geocoder = Geocoder(requireActivity(), Locale.getDefault())
@@ -185,13 +158,41 @@ class HomeFragment : Fragment() {
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
 
 
-        val eventRepository = EventRepositoryImpl()
-        val eventUseCase = EventUseCase(eventRepository)
-        val viewModelFactory = EventViewModelFactory(eventUseCase)
-        eventViewModel = ViewModelProvider(requireActivity(), viewModelFactory)[EventViewModel::class.java]
+        val firestoreManager = FireStoreManagerV2<CommunityEvent>("events")
+        val eventRepository = ExampleRepositoryFireStoreImpl(firestoreManager)
+        val eventUseCase = ExampleUseCase(eventRepository)
+        val eventViewModelFactory = EventViewModelFactory(eventUseCase)
+        eventViewModel =
+            ViewModelProvider(requireActivity(), eventViewModelFactory)[EventViewModel::class.java]
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
+    private fun deleteEventPost(
+        progressBar: ProgressBar,
+        layoutItem: LinearLayout,
+        dialog: BottomSheetDialog,
+        event: CommunityEvent
+    ) {
+        progressBar.visibility = View.VISIBLE
+        layoutItem.visibility = View.GONE
+
+        dialog.setCancelable(false)
+
+        eventViewModel.deleteData(event.id.toString())
+            .addOnCompleteListener { delete ->
+                if (delete.isSuccessful) {
+                    eventAdapter.refresh()
+                    dialog.dismiss()
+                } else {
+                    message.toastMsg("tidak dapat menghapus")
+                    dialog.dismiss()
+                }
+            }
+            .addOnFailureListener { excep ->
+                message.toastMsg("Error menghapus ${excep.message}")
+                dialog.dismiss()
+            }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -215,8 +216,8 @@ class HomeFragment : Fragment() {
             layoutManager =
                 LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
             adapter = eventAdapter.withLoadStateHeaderAndFooter(
-                header = LoadStateAdapter {eventAdapter.retry()},
-                footer = LoadStateAdapter {eventAdapter.retry()}
+                header = LoadStateAdapter { eventAdapter.retry() },
+                footer = LoadStateAdapter { eventAdapter.retry() }
             )
         }
 
@@ -274,7 +275,12 @@ class HomeFragment : Fragment() {
 
     private fun topAppBarBehaviour() {
         userViewModel.userData.observe(viewLifecycleOwner) {
-            checkingUserDocument(it.id.toString(), it.name.toString(), it.email.toString(), it.photoUrl.toString())
+            checkingUserDocument(
+                it.id.toString(),
+                it.name.toString(),
+                it.email.toString(),
+                it.photoUrl.toString()
+            )
             binding.appBarLayout.topAppBar.title = "Hi, ${it.name}"
             Glide.with(requireContext())
                 .asBitmap()
@@ -293,11 +299,7 @@ class HomeFragment : Fragment() {
 
                     override fun onLoadCleared(placeholder: Drawable?) {
                         // Handle jika gambar gagal dimuat atau dihapus
-                        Toast.makeText(
-                            requireActivity(),
-                            "Glide Gagal Upload Image Profile",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        message.toastMsg("Glide Gagal Upload Image Profile")
                     }
                 })
         }

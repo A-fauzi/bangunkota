@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 
 class AdapterPagingList<T: Any , V: ViewBinding>(
-    private val context: Context,
     private val bindCallback: (V, T) -> Unit,
     private val bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> V
     ) : PagingDataAdapter<T, AdapterPagingList<T, V>.ViewHolder>(object : DiffUtil.ItemCallback<T>(){

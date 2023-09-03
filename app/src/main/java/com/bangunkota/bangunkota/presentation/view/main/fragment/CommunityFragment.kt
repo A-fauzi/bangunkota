@@ -22,7 +22,6 @@ import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryIm
 import com.bangunkota.bangunkota.databinding.FragmentCommunityBinding
 import com.bangunkota.bangunkota.databinding.ItemCommunityPostBinding
 import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
-import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
 import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
@@ -234,68 +233,74 @@ class CommunityFragment : Fragment() {
         collectionReference = firestore.collection("users")
 
         // COMMUNITY SETUP ADAPTER
-        adapterPagingList = AdapterPagingList(requireActivity(), { binding, post ->
+        adapterPagingList = AdapterPagingList(
+            { binding, post ->
 
-            // EDITTEXT POST
-            binding.tvTextPost.text = post.text
+                // EDITTEXT POST
+                binding.tvTextPost.text = post.text
 
-            // GET INFORMATION USER BY POST UID
-            collectionReference.document(post.uid.toString()).get()
-                .addOnSuccessListener { userSnapshot ->
+                // GET INFORMATION USER BY POST UID
+                collectionReference.document(post.uid.toString()).get()
+                    .addOnSuccessListener { userSnapshot ->
 
-                    // WHEN SUCCESS GET DATA USERS
-                    // CEK USER IF EXISTS
-                    if (userSnapshot.exists()) {
+                        // WHEN SUCCESS GET DATA USERS
+                        // CEK USER IF EXISTS
+                        if (userSnapshot.exists()) {
 
-                        // GET VALUE AND SET TO ITEM POSTING COMMUNITY
-                        binding.itemNameUser.text = userSnapshot.getString("name")
-                        binding.itemEmailUser.text = userSnapshot.getString("email")
-                        Glide.with(requireActivity())
-                            .load(userSnapshot.getString("photoUrl"))
-                            .placeholder(R.drawable.img_placeholder)
-                            .error(R.drawable.img_placeholder)
-                            .into(binding.itemIvProfile)
-
-                        var isLoved = false
-                        binding.btnLove.setOnClickListener {
-                            val postId = post.id
-                            val currentUserId = user?.uid.toString()
-
-                            if (isLoved) {
-                                binding.btnLove.setImageResource(R.drawable.heart_outline)
-                                Toast.makeText(
-                                    requireActivity(),
-                                    "Batal Menyukai",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-
-                                // Handle deleted data like in document
-                            } else {
-                                binding.btnLove.setImageResource(R.drawable.heart_filled)
-                                Toast.makeText(
-                                    requireActivity(),
-                                    "Kamu Menyukai ini",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-
-//                                insertDataLikePost(postId)
+                            userViewModel.userData.observe(viewLifecycleOwner) {
+                                if (it.id.toString() != post.uid) {
+                                    binding.btnMorePost.visibility = View.GONE
+                                }
                             }
 
-                            isLoved = !isLoved
-                        }
+                            // GET VALUE AND SET TO ITEM POSTING COMMUNITY
+                            binding.btnMorePost.setOnClickListener {
+                                // Handle button more post
+                            }
 
+
+                            binding.itemNameUser.text = userSnapshot.getString("name")
+                            binding.itemEmailUser.text = userSnapshot.getString("email")
+                            Glide.with(requireActivity())
+                                .load(userSnapshot.getString("photoUrl"))
+                                .placeholder(R.drawable.img_placeholder)
+                                .error(R.drawable.img_placeholder)
+                                .into(binding.itemIvProfile)
+
+                            var isLoved = false
+                            binding.btnLove.setOnClickListener {
+                                val postId = post.id
+                                val currentUserId = user?.uid.toString()
+
+                                if (isLoved) {
+                                    binding.btnLove.setImageResource(R.drawable.heart_outline)
+                                    message.toastMsg("Batal Menyukai")
+
+                                    // Handle deleted data like in document
+                                } else {
+                                    binding.btnLove.setImageResource(R.drawable.heart_filled)
+                                    message.toastMsg("Kamu Menyukai ini")
+
+//                                insertDataLikePost(postId)
+                                }
+
+                                isLoved = !isLoved
+                            }
+
+
+                        }
+                    }
+                    .addOnFailureListener { exception ->
+
+                        // HANDLE IF FAILURE ON GET DOCUMENT USERS
+                        message.toastMsg("Error ${exception.message}")
 
                     }
-                }
-                .addOnFailureListener { exception ->
-
-                    // HANDLE IF FAILURE ON GET DOCUMENT USERS
-                    message.toastMsg("Error ${exception.message}")
-
-                }
 
 
-        }, ItemCommunityPostBinding::inflate)
+            },
+            ItemCommunityPostBinding::inflate
+        )
 
     }
 

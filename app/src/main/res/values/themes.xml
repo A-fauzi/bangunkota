@@ -13,6 +13,7 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
         <item name="android:textSize">12sp</item>
+        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
     </style>
 
     <style name="ThemeOverlay.AppTheme.TextInputEditText.Outlined" parent="">
@@ -27,4 +28,15 @@
         <item name="windowSplashScreenIconBackgroundColor">@color/purple_700</item>
         <item name="windowSplashScreenAnimationDuration">200</item>
     </style>
+
+
+    <!--  Bottom sheet  -->
+    <style name="AppBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/AppModalStyle</item>
+    </style>
+
+    <style name="AppModalStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/rounded_top_corner</item>
+    </style>
+    <!--  End Bottom sheet  -->
 </resources>

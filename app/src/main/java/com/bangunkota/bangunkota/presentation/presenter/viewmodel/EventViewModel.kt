@@ -8,29 +8,31 @@ import androidx.paging.cachedIn
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.bangunkota.bangunkota.data.datasource.PagingSource
 import com.bangunkota.bangunkota.domain.entity.CommunityEvent
-import com.bangunkota.bangunkota.domain.usecase.EventUseCase
+import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
+import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
 
-class EventViewModel(private val eventUseCase: EventUseCase): ViewModel() {
+class EventViewModel(private val eventUseCase: ExampleUseCase<CommunityEvent>) : ViewModel() {
     private val fireStore = FirebaseFirestore.getInstance()
     private val fireStoreManager = FireStoreManager(fireStore)
     private val pageSize = 10
 
+    
     val getEvents = Pager(PagingConfig(pageSize)) {
         PagingSource(fireStoreManager, "events", pageSize, CommunityEvent::class.java)
     }.flow.cachedIn(viewModelScope)
 
 
 
-    suspend fun insertEvent(data: CommunityEvent): Result<Unit> {
-        return eventUseCase.insertData(data)
+    fun insertEvent(data: CommunityEvent, documentId: String): Task<Void> {
+        return eventUseCase.createData(data, documentId)
     }
 
-    suspend fun updateEvent(event: CommunityEvent) {
-        eventUseCase.updateData(event)
+    fun updateEvent(event: CommunityEvent, documentId: String): Task<Void> {
+        return eventUseCase.updateData(event, documentId)
     }
 
-    suspend fun deleteData(eventId: String) {
-        eventUseCase.deleteData(eventId)
+    fun deleteData(eventId: String): Task<Void> {
+        return eventUseCase.deleteData(eventId)
     }
 }

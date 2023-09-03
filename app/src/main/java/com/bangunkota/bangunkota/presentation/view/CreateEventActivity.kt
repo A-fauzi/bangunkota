@@ -16,12 +16,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManagerV2
 import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
-import com.bangunkota.bangunkota.data.repository.implementatios.EventRepositoryImpl
+import com.bangunkota.bangunkota.data.repository.implementatios.ExampleRepositoryFireStoreImpl
 import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.ActivityCreateEventBinding
 import com.bangunkota.bangunkota.domain.entity.CommunityEvent
-import com.bangunkota.bangunkota.domain.usecase.EventUseCase
+import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
 import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
@@ -91,14 +92,15 @@ class CreateEventActivity : AppCompatActivity() {
     }
 
     private fun initObject() {
+        fireStoreManager = FireStoreManager(FirebaseFirestore.getInstance())
         message = MessageHandler(this)
 
-        val eventRepository = EventRepositoryImpl()
-        val eventUseCase = EventUseCase(eventRepository)
+        // EVENT CONFIG
+        val fireStoreManagerV2 = FireStoreManagerV2<CommunityEvent>("events")
+        val eventRepository = ExampleRepositoryFireStoreImpl(fireStoreManagerV2)
+        val eventUseCase = ExampleUseCase(eventRepository)
         val viewModelFactory = EventViewModelFactory(eventUseCase)
         eventViewModel = ViewModelProvider(this, viewModelFactory)[EventViewModel::class.java]
-
-        fireStoreManager = FireStoreManager(FirebaseFirestore.getInstance())
 
         // USER CONFIG
         userPreferencesManager = UserPreferencesManager(this)
@@ -108,7 +110,6 @@ class CreateEventActivity : AppCompatActivity() {
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     override fun onStart() {
         super.onStart()
 
@@ -117,7 +118,6 @@ class CreateEventActivity : AppCompatActivity() {
         onClickViews()
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     private fun onClickViews() {
         binding.cvUploadImage.setOnClickListener {
             getImageFromGalerry()
@@ -208,7 +208,7 @@ class CreateEventActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
+    // NANTI HANDLE FIRESTORAGE KE FIREBASE MANAGER DATASOURCE
     private fun uploadImageToFireStorage() {
         val firebaseStorage = FirebaseStorage.getInstance()
         val fileName = UUID.randomUUID()
@@ -266,9 +266,12 @@ class CreateEventActivity : AppCompatActivity() {
         binding.eventDate.outlinedTextFieldEvent.endIconMode = END_ICON_CUSTOM
         binding.eventTime.outlinedTextFieldEvent.endIconMode = END_ICON_CUSTOM
 
-        binding.eventLocation.outlinedTextFieldEvent.endIconDrawable = ResourcesCompat.getDrawable(resources, R.drawable.marker__1_, null)
-        binding.eventDate.outlinedTextFieldEvent.endIconDrawable = ResourcesCompat.getDrawable(resources, R.drawable.calendar, null)
-        binding.eventTime.outlinedTextFieldEvent.endIconDrawable = ResourcesCompat.getDrawable(resources, R.drawable.clock, null)
+        binding.eventLocation.outlinedTextFieldEvent.endIconDrawable =
+            ResourcesCompat.getDrawable(resources, R.drawable.marker__1_, null)
+        binding.eventDate.outlinedTextFieldEvent.endIconDrawable =
+            ResourcesCompat.getDrawable(resources, R.drawable.calendar, null)
+        binding.eventTime.outlinedTextFieldEvent.endIconDrawable =
+            ResourcesCompat.getDrawable(resources, R.drawable.clock, null)
 
         binding.eventTime.editTextCreateEvent.isEnabled = false
         binding.eventDate.editTextCreateEvent.isEnabled = false
@@ -279,55 +282,45 @@ class CreateEventActivity : AppCompatActivity() {
     private fun topAppBarBehaviour() {
         binding.appBarLayout.topAppBar.title = "Create Event"
         binding.appBarLayout.topAppBar.menu.findItem(R.id.account).isVisible = false
-        binding.appBarLayout.topAppBar.navigationIcon = ResourcesCompat.getDrawable(resources, R.drawable.angle_left, null)
+        binding.appBarLayout.topAppBar.navigationIcon =
+            ResourcesCompat.getDrawable(resources, R.drawable.angle_left, null)
     }
 
-    @RequiresApi(Build.VERSION_CODES.N)
     private fun storeDataToFireStore(imageUri: String) {
 
         userViewModel.userData.observe(this) {
 
             val event = setDataEvent(imageUri, it.id)
 
-            lifecycleScope.launch {
-
-                val result = eventViewModel.insertEvent(event)
-
-                result.onSuccess {
-                    if (result.isSuccess) {
-
-                        val intent = Intent(this@CreateEventActivity, MainActivity::class.java)
-                        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                        startActivity(intent)
-                        finish()
-
+            eventViewModel.insertEvent(event, event.id.toString())
+                .addOnCompleteListener { insert ->
+                    if (insert.isSuccessful) {
+                        getIntentActivity()
                     } else {
-
-                        binding.btnCreateEvent.visibility = View.VISIBLE
-                        binding.progressbar.visibility = View.GONE
-
-                        // Hapus foto sebelum nya yang berhasil di uploas ke firebase storage
-                        // this code
-
-                        enabledStateForm(true)
-
-                       message.toastMsg("Gagal Store Data ${event.id}")
+                        setViewOnFailedInsertDataEvent()
+                        message.toastMsg("Gagal Store Data ${event.id}")
                     }
-                }.onFailure { th ->
-
-                    binding.btnCreateEvent.visibility = View.VISIBLE
-                    binding.progressbar.visibility = View.GONE
-
-                    enabledStateForm(true)
-
-                    // Hapus foto sebelum nya yang berhasil di uploas ke firebase storage
-                    // this code
-
-                  message.toastMsg("Failure Store Data kesalahan ${th.localizedMessage}")
+                }.addOnFailureListener { exc ->
+                    setViewOnFailedInsertDataEvent()
+                    message.toastMsg("Failure Store Data kesalahan ${exc.localizedMessage}")
                 }
-            }
 
         }
+    }
+
+    private fun setViewOnFailedInsertDataEvent() {
+        binding.btnCreateEvent.visibility = View.VISIBLE
+        binding.progressbar.visibility = View.GONE
+        // Hapus foto sebelum nya yang berhasil di uploas ke firebase storage
+        // this code
+        enabledStateForm(true)
+    }
+
+    private fun getIntentActivity() {
+        val intent = Intent(this@CreateEventActivity, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+        finish()
     }
 
     private fun setDataEvent(
