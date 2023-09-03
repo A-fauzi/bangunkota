@@ -18,7 +18,7 @@ class EventViewModel(private val eventUseCase: ExampleUseCase<CommunityEvent>) :
     private val pageSize = 10
 
     
-    val getEvents = Pager(PagingConfig(pageSize)) {
+    val getEvents = Pager(PagingConfig(20)) {
         PagingSource(fireStoreManager, "events", pageSize, CommunityEvent::class.java)
     }.flow.cachedIn(viewModelScope)
 

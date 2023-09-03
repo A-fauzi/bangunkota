@@ -26,8 +26,8 @@ class AdapterPagingList<T: Any , V: ViewBinding>(
     inner class ViewHolder(val binding: V): RecyclerView.ViewHolder(binding.root)
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = getItem(position)
-        if (item != null) bindCallback(holder.binding, item)
+        val item = getItem(position) ?: return
+        bindCallback(holder.binding, item)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

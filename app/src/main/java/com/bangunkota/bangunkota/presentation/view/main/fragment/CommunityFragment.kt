@@ -180,23 +180,36 @@ class CommunityFragment : Fragment() {
         recyclerviewPost.apply {
             layoutManager =
                 LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
-            adapter = adapterPagingList.withLoadStateHeaderAndFooter(
-                header = LoadStateAdapter { adapterPagingList.retry() },
-                footer = LoadStateAdapter { adapterPagingList.retry() }
-            )
+            adapter = adapterPagingList
         }
 
-        adapterPagingList.addLoadStateListener { combinedLoadStates ->
-            val isLoading = combinedLoadStates.refresh is LoadState.Loading
+        lifecycleScope.launch {
+            adapterPagingList.loadStateFlow.collectLatest { loadStates ->
+                val isLoading = loadStates.refresh is LoadState.Loading
+                val isLoadingAppend = loadStates.append is LoadState.Loading
 
-            if (isLoading) {
-                binding.rvCommunityPost.visibility = View.GONE
-                binding.shimmerPost.visibility = View.VISIBLE
-            } else {
-                binding.rvCommunityPost.visibility = View.VISIBLE
-                binding.shimmerPost.visibility = View.GONE
+                if (isLoading) {
+                    binding.rvCommunityPost.visibility = View.GONE
+                    binding.shimmerPost.visibility = View.VISIBLE
+                } else {
+                    binding.rvCommunityPost.visibility = View.VISIBLE
+                    binding.shimmerPost.visibility = View.GONE
+                }
             }
         }
+
+//        adapterPagingList.addLoadStateListener { combinedLoadStates ->
+//            val isLoading = combinedLoadStates.refresh is LoadState.Loading
+//
+//            if (isLoading) {
+//                binding.rvCommunityPost.visibility = View.GONE
+//                binding.shimmerPost.visibility = View.VISIBLE
+//            } else {
+//                binding.rvCommunityPost.visibility = View.VISIBLE
+//                binding.shimmerPost.visibility = View.GONE
+//            }
+//        }
+
     }
 
     /**

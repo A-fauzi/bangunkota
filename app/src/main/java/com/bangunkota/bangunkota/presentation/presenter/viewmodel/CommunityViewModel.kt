@@ -17,20 +17,9 @@ class CommunityViewModel(private val communityUseCase: CommunityUseCase): ViewMo
     private val fireStoreManager = FireStoreManager(fireStore)
     private val pageSize = 10
 
-    val getPosts = Pager(PagingConfig(pageSize)) {
+    val getPosts = Pager(PagingConfig(20)) {
         PagingSource(fireStoreManager, "community_posts", pageSize, CommunityPost::class.java)
     }.flow.cachedIn(viewModelScope)
-
-
-//    fun fetchDataAndSaveToRoom() {
-//        viewModelScope.launch {
-//            try {
-//                communityUseCase.fetchDataAndSaveToRoom()
-//            }catch (e: Exception) {
-//                // Handle error
-//            }
-//        }
-//    }
 
 
     suspend fun insertPost(data: CommunityPost): Result<Unit> {

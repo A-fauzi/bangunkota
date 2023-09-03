@@ -53,6 +53,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import okio.IOException
 import java.util.*
@@ -215,23 +216,36 @@ class HomeFragment : Fragment() {
         binding.rvEvent.apply {
             layoutManager =
                 LinearLayoutManager(requireActivity(), LinearLayoutManager.VERTICAL, false)
-            adapter = eventAdapter.withLoadStateHeaderAndFooter(
-                header = LoadStateAdapter { eventAdapter.retry() },
-                footer = LoadStateAdapter { eventAdapter.retry() }
-            )
+            adapter = eventAdapter
         }
 
-        eventAdapter.addLoadStateListener { combinedLoadStates ->
-            val isLoading = combinedLoadStates.refresh is LoadState.Loading
 
-            if (isLoading) {
-                binding.rvEvent.visibility = View.GONE
-                binding.progressbar.visibility = View.VISIBLE
-            } else {
-                binding.rvEvent.visibility = View.VISIBLE
-                binding.progressbar.visibility = View.GONE
+        lifecycleScope.launch {
+            eventAdapter.loadStateFlow.collectLatest { loadStates ->
+                val isLoading = loadStates.refresh is LoadState.Loading
+                val isLoadingAppend = loadStates.append is LoadState.Loading
+
+                if (isLoading) {
+                    binding.rvEvent.visibility = View.GONE
+                    binding.progressbar.visibility = View.VISIBLE
+                } else {
+                    binding.rvEvent.visibility = View.VISIBLE
+                    binding.progressbar.visibility = View.GONE
+                }
             }
         }
+
+//        eventAdapter.addLoadStateListener { combinedLoadStates ->
+//            val isLoading = combinedLoadStates.refresh is LoadState.Loading
+//
+//            if (isLoading) {
+//                binding.rvEvent.visibility = View.GONE
+//                binding.progressbar.visibility = View.VISIBLE
+//            } else {
+//                binding.rvEvent.visibility = View.VISIBLE
+//                binding.progressbar.visibility = View.GONE
+//            }
+//        }
     }
 
     private fun getLastLocation() {
