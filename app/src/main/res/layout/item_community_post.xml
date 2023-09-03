@@ -57,6 +57,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/menu_dots"
                 app:tint="@color/purple_700"
+                android:padding="@dimen/padding_8"
                 android:layout_centerVertical="true"/>
         </RelativeLayout>
 
@@ -79,7 +80,8 @@
                 android:layout_height="wrap_content"
                 android:src="@drawable/heart_outline"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:layout_centerVertical="true"/>
+                android:layout_centerVertical="true"
+                android:padding="@dimen/padding_8"/>
 
             <ImageButton
                 android:layout_width="wrap_content"
@@ -87,8 +89,8 @@
                 android:src="@drawable/comment_alt"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_toEndOf="@id/btn_love"
-                android:layout_marginStart="@dimen/margin_16"
-                android:layout_centerVertical="true"/>
+                android:layout_centerVertical="true"
+                android:padding="@dimen/padding_8"/>
 
             <ImageButton
                 android:id="@+id/btn_share"
@@ -99,6 +101,7 @@
                 android:layout_marginEnd="@dimen/margin_8"
                 android:layout_centerVertical="true"
                 app:tint="@color/purple_700"
+                android:padding="@dimen/padding_8"
                 android:background="?attr/selectableItemBackgroundBorderless"/>
 
             <TextView
