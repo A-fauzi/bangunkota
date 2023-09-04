@@ -17,28 +17,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
-import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManagerV2
-import com.bangunkota.bangunkota.data.repository.abstractions.CommunityRepository
-import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
-import com.bangunkota.bangunkota.data.repository.implementatios.CommunityRepositoryImpl
 import com.bangunkota.bangunkota.data.repository.implementatios.ExampleRepositoryFireStoreImpl
-import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.BottomSheetMorePostBinding
 import com.bangunkota.bangunkota.databinding.FragmentCommunityBinding
 import com.bangunkota.bangunkota.databinding.ItemCommunityPostBinding
-import com.bangunkota.bangunkota.domain.entity.CommunityEvent
+import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
-import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
-import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
 import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
-import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
-import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.CommunityViewModel
-import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.CommunityViewModelFactory
-import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.UserViewModelFactory
 import com.bangunkota.bangunkota.utils.MessageHandler
 import com.bangunkota.bangunkota.utils.UniqueIdGenerator
@@ -95,24 +84,9 @@ class CommunityFragment : Fragment() {
     private lateinit var communityViewModelFactory: CommunityViewModelFactory
 
     /**
-     * COMMUNITY USECASE
-     */
-    private lateinit var communityUseCase: CommunityUseCase
-
-    /**
-     * COMMUNITY REPOSITORY
-     */
-    private lateinit var communityRepository: CommunityRepository
-
-    /**
      * RECYCLERVIEW POSTING
      */
     private lateinit var recyclerviewPost: RecyclerView
-
-    /**
-     * FIRESTORE DATABASE
-     */
-    private lateinit var firestore: FirebaseFirestore
 
     /**
      * FIREBASE AUTH
@@ -128,26 +102,6 @@ class CommunityFragment : Fragment() {
      * MESSAGE TOAST
      */
     private lateinit var message: MessageHandler
-
-    /**
-     * COLLECTION REFERENCE
-     */
-    private lateinit var collectionReference: CollectionReference
-
-    /**
-     * USER USECASE
-     */
-    private lateinit var userUseCase: UserUseCase
-
-    /**
-     * USER REPOSITORY
-     */
-    private lateinit var userRepository: UserRepository
-
-    /**
-     * FIRESTORE MANAGER
-     */
-    private lateinit var fireStoreManager: FireStoreManager
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -229,29 +183,25 @@ class CommunityFragment : Fragment() {
 
         // INIT
         auth = FirebaseAuth.getInstance()
-        firestore = FirebaseFirestore.getInstance()
-        fireStoreManager = FireStoreManager(firestore)
         message = MessageHandler(requireActivity())
-
         user = auth.currentUser
+
 
         // USER CONFIG
         userPreferencesManager = UserPreferencesManager(requireActivity())
-        userRepository = UserRepositoryImpl(fireStoreManager)
-        userUseCase = UserUseCase(userRepository)
+        val fireStoreManager = FireStoreManager<User>("users")
+        val userRepository = ExampleRepositoryFireStoreImpl(fireStoreManager)
+        val userUseCase = ExampleUseCase(userRepository)
         userViewModelFactory = UserViewModelFactory(userPreferencesManager, userUseCase)
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
 
 
         // COMMUNITY CONFIG
-        val firestoreManager = FireStoreManagerV2<CommunityPost>("community_posts")
+        val firestoreManager = FireStoreManager<CommunityPost>("community_posts")
         val postRepository = ExampleRepositoryFireStoreImpl(firestoreManager)
         val postUseCase = ExampleUseCase(postRepository)
         val postViewModelFactory = CommunityViewModelFactory(postUseCase)
         communityViewModel = ViewModelProvider(requireActivity(), postViewModelFactory)[CommunityViewModel::class.java]
-
-        // GET COLLECTION USERS
-        collectionReference = firestore.collection("users")
 
         // COMMUNITY SETUP ADAPTER
         adapterPagingList = AdapterPagingList(
@@ -260,16 +210,15 @@ class CommunityFragment : Fragment() {
                 // EDITTEXT POST
                 binding.tvTextPost.text = post.text
 
-                // GET INFORMATION USER BY POST UID
-                collectionReference.document(post.uid.toString()).get()
+                // GET USER BY ID IN LIST
+                userViewModel.getDocumentUserById(post.uid.toString())
                     .addOnSuccessListener { userSnapshot ->
-
                         // WHEN SUCCESS GET DATA USERS
                         // CEK USER IF EXISTS
                         if (userSnapshot.exists()) {
 
-                            userViewModel.userData.observe(viewLifecycleOwner) {
-                                if (it.id.toString() != post.uid) {
+                            userViewModel.userData.observe(viewLifecycleOwner) { currentUser ->
+                                if (currentUser.id.toString() != post.uid) {
                                     binding.btnMorePost.visibility = View.GONE
                                 }
                             }
@@ -321,16 +270,14 @@ class CommunityFragment : Fragment() {
                             }
 
 
+                        } else {
+                            message.toastMsg("user not exists")
                         }
                     }
-                    .addOnFailureListener { exception ->
-
+                    .addOnFailureListener {
                         // HANDLE IF FAILURE ON GET DOCUMENT USERS
-                        message.toastMsg("Error ${exception.message}")
-
+                        message.toastMsg("Error ${it.message}")
                     }
-
-
             },
             ItemCommunityPostBinding::inflate
         )

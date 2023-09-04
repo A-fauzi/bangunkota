@@ -5,18 +5,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
-import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.bangunkota.bangunkota.data.datasource.PagingSource
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.bangunkota.bangunkota.domain.entity.community_post.CommunityPost
-import com.bangunkota.bangunkota.domain.entity.community_post.UserLikePost
-import com.bangunkota.bangunkota.domain.usecase.CommunityUseCase
 import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
 import com.google.android.gms.tasks.Task
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.DocumentSnapshot
 
 class CommunityViewModel(private val communityUseCase: ExampleUseCase<CommunityPost>): ViewModel() {
-    private val fireStore = FirebaseFirestore.getInstance()
-    private val fireStoreManager = FireStoreManager(fireStore)
+    private val fireStoreManager = FireStoreManager<CommunityPost>("community_posts")
     private val pageSize = 10
 
     val getPosts = Pager(PagingConfig(20)) {
@@ -26,6 +23,14 @@ class CommunityViewModel(private val communityUseCase: ExampleUseCase<CommunityP
 
     fun insertPost(data: CommunityPost, documentId: String): Task<Void> {
         return communityUseCase.createData(data, documentId)
+    }
+
+    fun getDocumentUserById(id: String): Task<DocumentSnapshot> {
+        return try {
+            communityUseCase.getData(id)
+        } catch (e: Exception) {
+            throw e
+        }
     }
 
 //    suspend fun insertLikePost(data: UserLikePost): Task<Void> {

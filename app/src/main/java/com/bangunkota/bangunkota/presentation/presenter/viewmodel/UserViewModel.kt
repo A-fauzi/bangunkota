@@ -2,18 +2,22 @@ package com.bangunkota.bangunkota.presentation.presenter.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.bangunkota.bangunkota.domain.entity.User
-import com.bangunkota.bangunkota.domain.usecase.UserUseCase
+import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
 import com.bangunkota.bangunkota.utils.UserPreferencesManager
+import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
-class UserViewModel(private val preferencesManager: UserPreferencesManager, private val userUseCase: UserUseCase): ViewModel() {
+class UserViewModel(
+    private val preferencesManager: UserPreferencesManager,
+    private val userUseCase: ExampleUseCase<User>
+) : ViewModel() {
     val userData: LiveData<User> = preferencesManager.userDataFlow
         .map { userData -> userData }
         .asLiveData()
@@ -24,17 +28,18 @@ class UserViewModel(private val preferencesManager: UserPreferencesManager, priv
         }
     }
 
-    suspend fun createUserDocument(uid: String, user: User, onSuccess: () -> Unit, onFailure: () -> Unit) {
-        userUseCase.execute(uid, user, onSuccess, onFailure)
+    fun createUserDocument(data: User, documentId: String): Task<Void> {
+        return userUseCase.createData(data, documentId)
     }
 
-    private val _data = MutableLiveData<DocumentSnapshot?>()
-    val data: LiveData<DocumentSnapshot?> = _data
+//    private val _data = MutableLiveData<DocumentSnapshot?>()
+//    val data: LiveData<DocumentSnapshot?> = _data
 
-    fun getDocumentUserById(collectionPath: String, id: String) {
-        viewModelScope.launch {
-            val result = userUseCase.getUserById(collectionPath, id)
-            _data.postValue(result)
+    fun getDocumentUserById(id: String): Task<DocumentSnapshot> {
+        return try {
+            userUseCase.getData(id)
+        } catch (e: Exception) {
+            throw e
         }
     }
 }

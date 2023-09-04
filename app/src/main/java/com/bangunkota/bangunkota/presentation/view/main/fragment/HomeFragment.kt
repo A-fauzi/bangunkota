@@ -21,19 +21,14 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
-import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManagerV2
-import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.ExampleRepositoryFireStoreImpl
-import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.BottomSheetMorePostBinding
 import com.bangunkota.bangunkota.databinding.FragmentHomeBinding
 import com.bangunkota.bangunkota.databinding.ItemEventBinding
 import com.bangunkota.bangunkota.domain.entity.CommunityEvent
 import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
-import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.adapter.AdapterPagingList
-import com.bangunkota.bangunkota.presentation.adapter.LoadStateAdapter
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.MyLocationViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
@@ -83,23 +78,6 @@ class HomeFragment : Fragment() {
      */
     private lateinit var userViewModelFactory: UserViewModelFactory
 
-
-    /**
-     * USER USECASE
-     */
-    private lateinit var userUseCase: UserUseCase
-
-    /**
-     * USER REPOSITORY
-     */
-    private lateinit var userRepository: UserRepository
-
-    /**
-     * FIRESTORE MANAGER
-     */
-    private lateinit var fireStoreManager: FireStoreManager
-
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -117,14 +95,25 @@ class HomeFragment : Fragment() {
     private fun initObj() {
         message = MessageHandler(requireActivity())
         eventAdapter = AdapterPagingList({ binding, event ->
+
+            userViewModel.userData.observe(viewLifecycleOwner) { currentUser ->
+                if (currentUser.id != event.createdBy) {
+                    binding.btnMorePost.visibility = View.GONE
+                } else {
+                    binding.btnMorePost.visibility = View.VISIBLE
+                }
+            }
+
             binding.itemTitle.text = event.title
             binding.itemAddress.text = event.address
             binding.itemDate.text = event.date
             binding.itemTime.text = "${event.time} WIB"
+
             Glide.with(this@HomeFragment)
                 .load(event.image)
                 .error(R.drawable.img_placeholder)
                 .into(binding.itemImage)
+
             binding.btnMorePost.setOnClickListener {
                 // BottomSheet
                 val dialog = BottomSheetDialog(requireActivity())
@@ -138,8 +127,6 @@ class HomeFragment : Fragment() {
                     deleteEventPost(progressBar, layoutItem, dialog, event)
                 }
                 dialog.show()
-
-
             }
 
         }, ItemEventBinding::inflate)
@@ -148,18 +135,17 @@ class HomeFragment : Fragment() {
         geocoder = Geocoder(requireActivity(), Locale.getDefault())
         myLocation = MyLocation(requireActivity(), fusedLocationClient)
 
-        val fireStore = FirebaseFirestore.getInstance()
-        fireStoreManager = FireStoreManager(fireStore)
 
         // USER CONFIG
         userPreferencesManager = UserPreferencesManager(requireActivity())
-        userRepository = UserRepositoryImpl(fireStoreManager)
-        userUseCase = UserUseCase(userRepository)
+        val fireStoreManager = FireStoreManager<User>("users")
+        val userRepository = ExampleRepositoryFireStoreImpl(fireStoreManager)
+        val userUseCase = ExampleUseCase(userRepository)
         userViewModelFactory = UserViewModelFactory(userPreferencesManager, userUseCase)
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
 
 
-        val firestoreManager = FireStoreManagerV2<CommunityEvent>("events")
+        val firestoreManager = FireStoreManager<CommunityEvent>("events")
         val eventRepository = ExampleRepositoryFireStoreImpl(firestoreManager)
         val eventUseCase = ExampleUseCase(eventRepository)
         val eventViewModelFactory = EventViewModelFactory(eventUseCase)
@@ -348,14 +334,23 @@ class HomeFragment : Fragment() {
             null
         )
 
-        lifecycleScope.launch {
-            userViewModel.createUserDocument(uid, data,
-                onSuccess = {
-                    message.toastMsg("Data Pengguna berhasil disimpan")
-                }, onFailure = {
-                    message.toastMsg("Data Pengguna gagal disimpan")
+        // Cek jika user tidak ada, simpan data nya
+        userViewModel.getDocumentUserById(uid).addOnSuccessListener { snapshot ->
+            if (snapshot.exists()) {
+//                message.toastMsg("user exists")
+            } else {
+                userViewModel.createUserDocument(data, uid).addOnCompleteListener { createUser ->
+                    if (createUser.isSuccessful) {
+                        message.toastMsg("Terimakasih udah join, Data Kamu kami simpan ya 😊")
+                    } else {
+                        message.toastMsg("ada kesalahan saat menyimpan data kamu nih 😒")
+                    }
+                }.addOnFailureListener {
+                    message.toastMsg("Upss, error ${it.message} saat menyimpan data user")
                 }
-            )
+            }
+        }.addOnFailureListener {
+            message.toastMsg("user snapshot error ${it.message}")
         }
 
     }

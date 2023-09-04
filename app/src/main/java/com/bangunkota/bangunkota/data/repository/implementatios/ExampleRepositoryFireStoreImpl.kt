@@ -1,12 +1,11 @@
 package com.bangunkota.bangunkota.data.repository.implementatios
 
-import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManagerV2
+import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
 import com.bangunkota.bangunkota.data.repository.abstractions.ExampleRepositoryFireStore
-import com.bangunkota.bangunkota.domain.entity.User
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentSnapshot
 
-class ExampleRepositoryFireStoreImpl<T: Any>(private val fireStoreManagerV2: FireStoreManagerV2<T>): ExampleRepositoryFireStore<T> {
+class ExampleRepositoryFireStoreImpl<T: Any>(private val fireStoreManagerV2: FireStoreManager<T>): ExampleRepositoryFireStore<T> {
     override fun createData(data: T, documentId: String): Task<Void> {
         return fireStoreManagerV2.create(data, documentId)
     }

@@ -1,15 +1,14 @@
 package com.bangunkota.bangunkota.data.datasource.remote.firebase
 
-import com.bangunkota.bangunkota.domain.entity.User
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.QuerySnapshot
+import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.*
 import kotlinx.coroutines.tasks.await
 
-class FireStoreManager(private val firestore: FirebaseFirestore) {
+class FireStoreManager<T: Any>(private val collection: String) {
+    private val db = FirebaseFirestore.getInstance()
+
     suspend fun getInitialPage(collectionPath: String, pageSize: Int): QuerySnapshot {
-        return firestore.collection(collectionPath)
+        return db.collection(collectionPath)
             .limit(pageSize.toLong())
             .orderBy("created_at", Query.Direction.DESCENDING)
             .get()
@@ -17,7 +16,7 @@ class FireStoreManager(private val firestore: FirebaseFirestore) {
     }
 
     suspend fun getNextPage(collectionPath: String, pageSize: Int, lastDocumentSnapshot: DocumentSnapshot): QuerySnapshot {
-        return firestore.collection(collectionPath)
+        return db.collection(collectionPath)
             .limit(pageSize.toLong())
             .orderBy("created_at", Query.Direction.DESCENDING)
             .startAfter(lastDocumentSnapshot)
@@ -25,34 +24,27 @@ class FireStoreManager(private val firestore: FirebaseFirestore) {
             .await()
     }
 
-    suspend fun getDocumentById(collectionPath: String, id: String): DocumentSnapshot {
-        return firestore.collection(collectionPath)
-            .document(id)
-            .get()
-            .await()
+    fun create(data: T, documentId: String): Task<Void>{
+        return db.collection(collection)
+            .document(documentId)
+            .set(data)
     }
 
-    fun createUserDocument(uid: String, user: User, onSuccess: () -> Unit, onFailure: () -> Unit) {
-        val userRef = firestore.collection("users").document(uid)
+    fun getData(documentId: String): Task<DocumentSnapshot> {
+        return db.collection(collection)
+            .document(documentId)
+            .get()
+    }
 
-        userRef.get().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val document = task.result
-                if (!document.exists()) {
-                    // Dokumen pengguna belum ada, maka Anda bisa memasukkan datanya ke Firestore
-                    userRef.set(user)
-                        .addOnSuccessListener {
-                            onSuccess()
-                        }
-                        .addOnFailureListener { exception ->
-                            onFailure()
-                        }
-                } else {
-                    // Jika pengguna sudah ada di database
-                }
-            } else {
-                onFailure()
-            }
-        }
+    fun update(data: T, documentId: String): Task<Void> {
+        return db.collection(collection)
+            .document(documentId)
+            .set(data, SetOptions.merge())
+    }
+
+    fun delete(documentId: String): Task<Void> {
+        return db.collection(collection)
+            .document(documentId)
+            .delete()
     }
 }

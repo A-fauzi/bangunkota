@@ -13,17 +13,13 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import com.bangunkota.bangunkota.R
 import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManager
-import com.bangunkota.bangunkota.data.datasource.remote.firebase.FireStoreManagerV2
-import com.bangunkota.bangunkota.data.repository.abstractions.UserRepository
 import com.bangunkota.bangunkota.data.repository.implementatios.ExampleRepositoryFireStoreImpl
-import com.bangunkota.bangunkota.data.repository.implementatios.UserRepositoryImpl
 import com.bangunkota.bangunkota.databinding.ActivityCreateEventBinding
 import com.bangunkota.bangunkota.domain.entity.CommunityEvent
+import com.bangunkota.bangunkota.domain.entity.User
 import com.bangunkota.bangunkota.domain.usecase.ExampleUseCase
-import com.bangunkota.bangunkota.domain.usecase.UserUseCase
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.EventViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodel.UserViewModel
 import com.bangunkota.bangunkota.presentation.presenter.viewmodelfactory.EventViewModelFactory
@@ -38,7 +34,6 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
@@ -63,22 +58,6 @@ class CreateEventActivity : AppCompatActivity() {
      */
     private lateinit var userViewModelFactory: UserViewModelFactory
 
-
-    /**
-     * USER USECASE
-     */
-    private lateinit var userUseCase: UserUseCase
-
-    /**
-     * USER REPOSITORY
-     */
-    private lateinit var userRepository: UserRepository
-
-    /**
-     * FIRESTORE MANAGER
-     */
-    private lateinit var fireStoreManager: FireStoreManager
-
     private lateinit var message: MessageHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,20 +71,20 @@ class CreateEventActivity : AppCompatActivity() {
     }
 
     private fun initObject() {
-        fireStoreManager = FireStoreManager(FirebaseFirestore.getInstance())
         message = MessageHandler(this)
 
         // EVENT CONFIG
-        val fireStoreManagerV2 = FireStoreManagerV2<CommunityEvent>("events")
-        val eventRepository = ExampleRepositoryFireStoreImpl(fireStoreManagerV2)
+        val fireStoreManager = FireStoreManager<CommunityEvent>("events")
+        val eventRepository = ExampleRepositoryFireStoreImpl(fireStoreManager)
         val eventUseCase = ExampleUseCase(eventRepository)
         val viewModelFactory = EventViewModelFactory(eventUseCase)
         eventViewModel = ViewModelProvider(this, viewModelFactory)[EventViewModel::class.java]
 
         // USER CONFIG
         userPreferencesManager = UserPreferencesManager(this)
-        userRepository = UserRepositoryImpl(fireStoreManager)
-        userUseCase = UserUseCase(userRepository)
+        val fireStoreManagerUser = FireStoreManager<User>("users")
+        val userRepository = ExampleRepositoryFireStoreImpl(fireStoreManagerUser)
+        val userUseCase = ExampleUseCase(userRepository)
         userViewModelFactory = UserViewModelFactory(userPreferencesManager, userUseCase)
         userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
     }
